@@ -1,0 +1,17 @@
+[project]
+title = Healthy Eaters
+version = 0.1.0
+
+[bootstrap]
+main_collection = /main/main.collection
+
+[script]
+shared_state = 1
+
+[display]
+high_dpi = 1
+width = 1280
+height = 720
+
+[sound]
+gain = 1

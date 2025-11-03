@@ -1,0 +1,13 @@
+function init(self)
+    print("Healthy Eaters app is running!")
+    msg.post(".", "acquire_input_focus")
+    self.t = 0
+end
+
+function update(self, dt)
+    self.t = self.t + dt
+    if self.t >= 2.0 then
+        self.t = 0
+        print("🍎 Simulated food eaten! Points awarded!")
+    end
+end

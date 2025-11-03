@@ -1,0 +1,8 @@
+name: "main"
+scale_along_z: 0
+embedded_instances {
+  id: "root"
+  data: "components {\n  id: \"script\"\n  component: \"/main/main.script\"\n  position { x: 0.0 y: 0.0 z: 0.0 }\n  rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }\n}\n"
+  position { x: 0.0 y: 0.0 z: 0.0 }
+  rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+}

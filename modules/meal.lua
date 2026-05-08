@@ -3,15 +3,26 @@ local glossary = require("modules.glossary")
 local M = { state = nil }
 
 local TARGET_GRAMS = 40 -- threshold for completion per session
-local START_WEIGHT = 0
+
+local function now()
+	if socket and socket.gettime then
+		return socket.gettime()
+	end
+	return os.time()
+end
 
 function M.start_session(food_name)
-	M.state = { food = food_name, start = socket.gettime(), start_weight = START_WEIGHT, last_weight = START_WEIGHT, eaten = 0, complete = false }
+	M.state = { food = food_name, start = now(), start_weight = nil, last_weight = nil, eaten = 0, complete = false }
 	glossary.touch(food_name) -- ensure in glossary
 end
 
 function M.on_weight_update(grams)
 	if not M.state then return 0 end
+	if not M.state.last_weight then
+		M.state.start_weight = grams
+		M.state.last_weight = grams
+		return 0
+	end
 	-- Positive eaten delta when weight decreases
 	local delta = math.max(0, (M.state.last_weight - grams))
 	M.state.last_weight = grams

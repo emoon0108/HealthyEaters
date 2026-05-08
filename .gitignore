@@ -1,3 +1,6 @@
 .internal
 /.editor_settings
 /build.internal
+/build
+.DS_Store
+**/.DS_Store

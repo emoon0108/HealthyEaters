@@ -1,13 +1,41 @@
+local storage = require("modules.storage")
+local ble = require("modules.ble")
+local meal = require("modules.meal")
+local recommend = require("modules.recommend")
+local rewards = require("modules.rewards")
+
 function init(self)
-    print("Healthy Eaters app is running!")
-    msg.post(".", "acquire_input_focus")
-    self.t = 0
+	print("Healthy Eaters app is running")
+	msg.post(".", "acquire_input_focus")
+
+	storage.init()
+	self.rewarded = false
+	self.current_food = recommend.next_meal_recs(1)[1] or "Apple"
+	meal.start_session(self.current_food)
+	print("Starting meal challenge: " .. self.current_food)
+
+	ble.init({
+		on_connected = function()
+			print("Smart plate connected")
+		end,
+		on_weight = function(grams)
+			local pct = meal.on_weight_update(grams)
+			local progress = math.floor(pct * 100)
+			print("Plate weight: " .. grams .. "g, progress: " .. progress .. "%")
+			if meal.is_complete() and not self.rewarded then
+				self.rewarded = true
+				rewards.award_points(25, { reason = "meal_complete" })
+				rewards.award_tokens(3)
+				print("Meal complete. Awarded 25 points and 3 game tokens.")
+				print("Total points: " .. rewards.get_points() .. ", tokens: " .. rewards.get_tokens())
+			end
+		end,
+		on_disconnected = function()
+			print("Smart plate disconnected")
+		end,
+	})
 end
 
-function update(self, dt)
-    self.t = self.t + dt
-    if self.t >= 2.0 then
-        self.t = 0
-        print("🍎 Simulated food eaten! Points awarded!")
-    end
+function final(self)
+	ble.disconnect()
 end

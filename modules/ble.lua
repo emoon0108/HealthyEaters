@@ -1,6 +1,6 @@
 -- Platform-agnostic Lua API. Implement the native side via a Defold Native Extension
 -- that talks to CoreBluetooth (iOS) / Android BLE. For now, we simulate data.
-local M = { cb = nil, connected = false }
+local M = { cb = nil, connected = false, connecting = false }
 
 local function simulate()
 	-- Simulate decreasing plate weight over time
@@ -16,12 +16,19 @@ end
 
 function M.init(callbacks)
 	M.cb = callbacks or {}
-	M.connected = true
-	if M.cb.on_connected then M.cb.on_connected() end
-	simulate()
+	M.connected = false
+	M.connecting = true
+	timer.delay(0.8, false, function()
+		if not M.connecting then return end
+		M.connecting = false
+		M.connected = true
+		if M.cb.on_connected then M.cb.on_connected() end
+		simulate()
+	end)
 end
 
 function M.disconnect()
+	M.connecting = false
 	M.connected = false
 	if M.cb and M.cb.on_disconnected then M.cb.on_disconnected() end
 end

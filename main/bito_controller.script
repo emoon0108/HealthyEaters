@@ -1,0 +1,124 @@
+local storage = require("modules.storage")
+local bito = require("modules.bito")
+local tasks = require("modules.tasks")
+local rewards = require("modules.rewards")
+
+local BITO_ANIMATIONS = {
+	Scout = {
+		idle = "scout_idle",
+		charged_idle = "scout_idle",
+		low_power = "scout_low_power",
+		recharge = "scout_recharge",
+		happy_dance = "scout_happy_dance",
+	},
+	Technician = {
+		idle = "technician_idle",
+		charged_idle = "technician_idle",
+		low_power = "technician_low_power",
+		recharge = "technician_recharge",
+		happy_dance = "technician_happy_dance",
+	},
+	Explorer = {
+		idle = "explorer_idle",
+		charged_idle = "explorer_idle",
+		low_power = "explorer_low_power",
+		recharge = "explorer_recharge",
+		happy_dance = "explorer_happy_dance",
+	},
+}
+
+local function ensure_storage()
+	if not storage.get_state() then
+		storage.init()
+	end
+	tasks.all()
+	bito.sync_form()
+end
+
+local function play_animation(self, state_name)
+	local data = bito.get_state()
+	local form = data.current_form or "Scout"
+	local animations = BITO_ANIMATIONS[form] or BITO_ANIMATIONS.Scout
+	local animation_id = animations[state_name] or animations.idle
+
+	self.current_animation = animation_id
+	local ok = pcall(sprite.play_flipbook, "#sprite", hash(animation_id))
+	if not ok then
+		print("Bito animation requested: " .. animation_id)
+	end
+end
+
+local function sync_bito_ui(self)
+	local data = bito.get_state()
+	msg.post("#gui", "bito_status", {
+		level = data.level,
+		exp = data.exp,
+		energy_level = data.energy_level,
+		current_form = data.current_form,
+		animation = self.current_animation,
+		speech = tasks.current_description(),
+		points = rewards.get_points(),
+		tokens = rewards.get_tokens(),
+	})
+end
+
+local function complete_missions(self, completed)
+	for _, mission in ipairs(completed or {}) do
+		msg.post("#bito_controller", "task_completed", { mission_id = mission.id })
+	end
+end
+
+function update_bito_visuals(self)
+	local data = bito.get_state()
+	local form = data.current_form
+	if (data.level or 1) <= 5 then
+		form = "Scout"
+	elseif data.level <= 10 then
+		form = "Technician"
+	else
+		form = "Explorer"
+	end
+
+	if form ~= data.current_form then
+		data.current_form = form
+		local s = storage.get_state()
+		s.bito = data
+		storage.save_state(s)
+	end
+
+	play_animation(self, bito.get_status())
+	sync_bito_ui(self)
+end
+
+function init(self)
+	ensure_storage()
+	self.current_animation = nil
+	update_bito_visuals(self)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("meal_completed") or message_id == hash("meal_complete") then
+		local grams = message.grams_eaten or message.grams or 40
+		bito.add_energy(25)
+		bito.add_exp(30)
+		play_animation(self, "recharge")
+		complete_missions(self, tasks.check_task_progress("grams_eaten", grams))
+		sync_bito_ui(self)
+	elseif message_id == hash("food_step_completed") then
+		bito.add_exp(5)
+		complete_missions(self, tasks.check_task_progress("food_step", 1))
+		sync_bito_ui(self)
+	elseif message_id == hash("game_played") then
+		bito.add_exp(15)
+		complete_missions(self, tasks.check_task_progress("game_played", 1))
+		sync_bito_ui(self)
+	elseif message_id == hash("task_completed") then
+		local mission_id = message.mission_id
+		local ok, mission = tasks.claim(mission_id)
+		if ok then
+			rewards.award_points(mission.reward_points or 10, { reason = "bito_task", task_id = mission.id })
+		end
+		play_animation(self, "happy_dance")
+		update_bito_visuals(self)
+	end
+end

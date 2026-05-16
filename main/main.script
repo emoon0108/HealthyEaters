@@ -1,39 +1,121 @@
 local storage = require("modules.storage")
 local ble = require("modules.ble")
+local glossary = require("modules.glossary")
 local meal = require("modules.meal")
 local recommend = require("modules.recommend")
 local rewards = require("modules.rewards")
+
+local STEP_REWARDS = {
+	look = 5,
+	interact = 5,
+	taste = 10,
+}
+
+local function post_wallet(self, message_id, extra)
+	extra = extra or {}
+	extra.points = rewards.get_points()
+	extra.tokens = rewards.get_tokens()
+	msg.post("#gui", message_id, extra)
+end
+
+local function start_meal(self)
+	if self.meal_active and not self.rewarded then
+		post_wallet(self, "meal_started", {
+			food = self.current_food,
+			steps = meal.step_status(),
+		})
+		return
+	end
+
+	self.rewarded = false
+	self.meal_active = true
+	self.current_food = recommend.next_meal_recs(1)[1] or "Apple"
+	meal.start_session(self.current_food)
+	if meal.mark_look() then
+		rewards.award_points(STEP_REWARDS.look, { reason = "meal_step", step = "look" })
+	end
+	print("Starting meal challenge: " .. self.current_food)
+	post_wallet(self, "meal_started", {
+		food = self.current_food,
+		steps = meal.step_status(),
+	})
+	post_wallet(self, "plate_status", {
+		status = "calibrating",
+		food = self.current_food,
+	})
+
+	ble.init({
+		on_connected = function()
+			print("Smart plate connected")
+			post_wallet(self, "plate_status", {
+				status = "connected",
+				food = self.current_food,
+			})
+		end,
+		on_weight = function(grams)
+			local pct, step_events = meal.on_weight_update(grams)
+			local progress = math.floor(pct * 100)
+			print("Plate weight: " .. grams .. "g, progress: " .. progress .. "%")
+			for _, step in ipairs(step_events or {}) do
+				if STEP_REWARDS[step] then
+					rewards.award_points(STEP_REWARDS[step], { reason = "meal_step", step = step })
+					msg.post("#bito_controller", "food_step_completed", {
+						step = step,
+						food = self.current_food,
+					})
+				end
+			end
+			post_wallet(self, "meal_progress", {
+				food = self.current_food,
+				grams = grams,
+				progress = progress,
+				steps = meal.step_status(),
+			})
+			if meal.is_complete() and not self.rewarded then
+				self.rewarded = true
+				self.meal_active = false
+				rewards.award_points(25, { reason = "meal_complete" })
+				rewards.award_tokens(3)
+				print("Meal complete. Awarded 25 points and 3 game tokens.")
+				print("Total points: " .. rewards.get_points() .. ", tokens: " .. rewards.get_tokens())
+				post_wallet(self, "meal_complete", {
+					food = self.current_food,
+					steps = meal.step_status(),
+				})
+				msg.post("#bito_controller", "meal_completed", {
+					food = self.current_food,
+					grams_eaten = 40,
+				})
+			end
+		end,
+		on_disconnected = function()
+			print("Smart plate disconnected")
+			post_wallet(self, "plate_status", {
+				status = "disconnected",
+				food = self.current_food,
+			})
+		end,
+	})
+end
 
 function init(self)
 	print("Healthy Eaters app is running")
 	msg.post(".", "acquire_input_focus")
 
 	storage.init()
+	glossary.ensure_defaults()
 	self.rewarded = false
-	self.current_food = recommend.next_meal_recs(1)[1] or "Apple"
-	meal.start_session(self.current_food)
-	print("Starting meal challenge: " .. self.current_food)
-
-	ble.init({
-		on_connected = function()
-			print("Smart plate connected")
-		end,
-		on_weight = function(grams)
-			local pct = meal.on_weight_update(grams)
-			local progress = math.floor(pct * 100)
-			print("Plate weight: " .. grams .. "g, progress: " .. progress .. "%")
-			if meal.is_complete() and not self.rewarded then
-				self.rewarded = true
-				rewards.award_points(25, { reason = "meal_complete" })
-				rewards.award_tokens(3)
-				print("Meal complete. Awarded 25 points and 3 game tokens.")
-				print("Total points: " .. rewards.get_points() .. ", tokens: " .. rewards.get_tokens())
-			end
-		end,
-		on_disconnected = function()
-			print("Smart plate disconnected")
-		end,
+	self.meal_active = false
+	msg.post("#gui", "app_ready", {
+		points = rewards.get_points(),
+		tokens = rewards.get_tokens(),
 	})
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("start_meal") then
+		start_meal(self)
+	end
 end
 
 function final(self)

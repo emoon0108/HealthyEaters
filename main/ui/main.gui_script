@@ -1,0 +1,1226 @@
+local games = require("modules.games")
+local rewards = require("modules.rewards")
+local shop = require("modules.shop")
+local storage = require("modules.storage")
+
+local NORMAL_COLORS = {
+	bg = vmath.vector4(0.97, 1.0, 0.84, 1),
+	panel = vmath.vector4(1.0, 0.98, 0.68, 1),
+	card = vmath.vector4(0.78, 0.95, 1.0, 1),
+	leaf = vmath.vector4(0.04, 0.68, 0.34, 1),
+	leaf_dark = vmath.vector4(0.03, 0.24, 0.16, 1),
+	blue = vmath.vector4(0.04, 0.53, 0.94, 1),
+	coral = vmath.vector4(1.0, 0.36, 0.25, 1),
+	gold = vmath.vector4(1.0, 0.73, 0.03, 1),
+	purple = vmath.vector4(0.47, 0.34, 0.95, 1),
+	pink = vmath.vector4(0.98, 0.35, 0.64, 1),
+	mint = vmath.vector4(0.42, 0.86, 0.58, 1),
+	sky = vmath.vector4(0.44, 0.78, 1.0, 1),
+	glass = vmath.vector4(1.0, 1.0, 1.0, 0.68),
+	shadow = vmath.vector4(0.12, 0.22, 0.26, 0.18),
+	tube = vmath.vector4(0.10, 0.82, 0.95, 0.9),
+	text = vmath.vector4(0.08, 0.16, 0.1, 1),
+	white = vmath.vector4(1, 1, 1, 1),
+}
+
+local LOW_STIM_COLORS = {
+	bg = vmath.vector4(0.95, 0.97, 0.94, 1),
+	panel = vmath.vector4(0.90, 0.94, 0.88, 1),
+	card = vmath.vector4(0.88, 0.93, 0.95, 1),
+	leaf = vmath.vector4(0.20, 0.48, 0.36, 1),
+	leaf_dark = vmath.vector4(0.10, 0.24, 0.18, 1),
+	blue = vmath.vector4(0.28, 0.48, 0.62, 1),
+	coral = vmath.vector4(0.68, 0.42, 0.36, 1),
+	gold = vmath.vector4(0.70, 0.56, 0.25, 1),
+	purple = vmath.vector4(0.45, 0.42, 0.58, 1),
+	pink = vmath.vector4(0.68, 0.47, 0.55, 1),
+	mint = vmath.vector4(0.62, 0.76, 0.64, 1),
+	sky = vmath.vector4(0.62, 0.72, 0.80, 1),
+	glass = vmath.vector4(1.0, 1.0, 1.0, 0.58),
+	shadow = vmath.vector4(0.10, 0.16, 0.18, 0.12),
+	tube = vmath.vector4(0.38, 0.64, 0.70, 0.85),
+	text = vmath.vector4(0.10, 0.15, 0.12, 1),
+	white = vmath.vector4(1, 1, 1, 1),
+}
+
+local COLORS = NORMAL_COLORS
+
+local GAME_ROUNDS = {
+	food_match = {
+		{ prompt = "Apple belongs in which food group?", choices = { "Fruits", "Vegetables", "Protein", "Dairy" }, answer = "Fruits" },
+		{ prompt = "Rice belongs in which food group?", choices = { "Dairy", "Grains", "Fruits", "Protein" }, answer = "Grains" },
+		{ prompt = "Chicken belongs in which food group?", choices = { "Protein", "Dairy", "Vegetables", "Grains" }, answer = "Protein" },
+		{ prompt = "Yogurt belongs in which food group?", choices = { "Fruits", "Dairy", "Protein", "Grains" }, answer = "Dairy" },
+		{ prompt = "Broccoli belongs in which food group?", choices = { "Vegetables", "Dairy", "Fruits", "Protein" }, answer = "Vegetables" },
+		{ prompt = "Beans can help with which food group?", choices = { "Protein", "Dairy", "Fruit", "Treats" }, answer = "Protein" },
+		{ prompt = "Milk belongs in which food group?", choices = { "Dairy", "Grains", "Vegetables", "Protein" }, answer = "Dairy" },
+		{ prompt = "Banana belongs in which food group?", choices = { "Fruits", "Dairy", "Grains", "Protein" }, answer = "Fruits" },
+		{ prompt = "Bread belongs in which food group?", choices = { "Grains", "Fruits", "Dairy", "Vegetables" }, answer = "Grains" },
+		{ prompt = "Eggs are most often counted as which group?", choices = { "Protein", "Dairy", "Fruits", "Grains" }, answer = "Protein" },
+		{ prompt = "Peas fit best with which group?", choices = { "Vegetables", "Dairy", "Treats", "Fruits" }, answer = "Vegetables" },
+		{ prompt = "Cheese belongs in which food group?", choices = { "Dairy", "Grains", "Protein", "Fruits" }, answer = "Dairy" },
+	},
+	garden_catch = {
+		{ prompt = "Catch a garden food!", choices = { "Carrot", "Soda", "Candy", "Cupcake" }, answer = "Carrot" },
+		{ prompt = "Catch a fruit!", choices = { "Cookie", "Blueberry", "Chips", "Cola" }, answer = "Blueberry" },
+		{ prompt = "Catch a vegetable!", choices = { "Broccoli", "Cupcake", "Cola", "Candy" }, answer = "Broccoli" },
+		{ prompt = "Catch something that grows on a plant.", choices = { "Strawberry", "Soda", "Cookie", "Lollipop" }, answer = "Strawberry" },
+		{ prompt = "Catch a green garden food.", choices = { "Spinach", "Candy", "Cola", "Cake" }, answer = "Spinach" },
+		{ prompt = "Catch a crunchy garden snack.", choices = { "Cucumber", "Soda", "Chocolate", "Chips" }, answer = "Cucumber" },
+		{ prompt = "Catch a food that grows underground.", choices = { "Potato", "Soda", "Cookie", "Candy" }, answer = "Potato" },
+		{ prompt = "Catch a tiny fruit.", choices = { "Grape", "Chips", "Cola", "Cake" }, answer = "Grape" },
+		{ prompt = "Catch a leafy vegetable.", choices = { "Lettuce", "Cupcake", "Soda", "Cookie" }, answer = "Lettuce" },
+		{ prompt = "Catch a garden food that is orange.", choices = { "Pumpkin", "Candy", "Cola", "Cookie" }, answer = "Pumpkin" },
+		{ prompt = "Catch a food from a tree.", choices = { "Apple", "Soda", "Candy", "Chips" }, answer = "Apple" },
+		{ prompt = "Catch a food with seeds.", choices = { "Watermelon", "Lollipop", "Soda", "Cookie" }, answer = "Watermelon" },
+	},
+	plate_builder = {
+		{ prompt = "Pick a fruit for the plate.", choices = { "Apple", "Candy", "Soda", "Cookie" }, answer = "Apple" },
+		{ prompt = "Pick a vegetable for the plate.", choices = { "Cookie", "Carrot", "Cola", "Cake" }, answer = "Carrot" },
+		{ prompt = "Pick a protein for the plate.", choices = { "Chicken", "Lollipop", "Juice Box", "Candy" }, answer = "Chicken" },
+		{ prompt = "Pick a grain for steady energy.", choices = { "Rice", "Soda", "Candy", "Cupcake" }, answer = "Rice" },
+		{ prompt = "Pick a dairy food for the plate.", choices = { "Yogurt", "Cola", "Chips", "Cookie" }, answer = "Yogurt" },
+		{ prompt = "Pick the best balanced pair.", choices = { "Rice and Beans", "Soda and Candy", "Cookie and Cola", "Cake and Chips" }, answer = "Rice and Beans" },
+		{ prompt = "Pick a fruit and dairy pair.", choices = { "Banana and Yogurt", "Soda and Chips", "Candy and Cookie", "Cola and Cake" }, answer = "Banana and Yogurt" },
+		{ prompt = "Pick a vegetable and protein pair.", choices = { "Broccoli and Chicken", "Candy and Soda", "Cookie and Cola", "Cake and Chips" }, answer = "Broccoli and Chicken" },
+		{ prompt = "Pick a balanced breakfast choice.", choices = { "Oatmeal and Berries", "Candy and Soda", "Cookie and Cola", "Cake and Lollipop" }, answer = "Oatmeal and Berries" },
+		{ prompt = "Pick a colorful plate choice.", choices = { "Carrot, peas, rice", "Rice, bread, crackers", "Candy, cake, soda", "Cookie, cola, chips" }, answer = "Carrot, peas, rice" },
+		{ prompt = "Pick a food that belongs in the protein spot.", choices = { "Beans", "Soda", "Candy", "Water" }, answer = "Beans" },
+		{ prompt = "Pick the plate with fruit.", choices = { "Apple slices", "Cola", "Chips", "Cookie" }, answer = "Apple slices" },
+	},
+	texture_sort = {
+		{ prompt = "Which food is crunchy?", choices = { "Carrot", "Yogurt", "Banana", "Rice" }, answer = "Carrot" },
+		{ prompt = "Which food is smooth?", choices = { "Rice", "Yogurt", "Pretzel", "Apple" }, answer = "Yogurt" },
+		{ prompt = "Which food is soft?", choices = { "Banana", "Raw Carrot", "Cracker", "Cucumber" }, answer = "Banana" },
+		{ prompt = "Which food can feel chewy?", choices = { "Chicken", "Milk", "Applesauce", "Watermelon" }, answer = "Chicken" },
+		{ prompt = "Which pair has two crunchy foods?", choices = { "Carrot and Apple", "Yogurt and Milk", "Rice and Banana", "Chicken and Soup" }, answer = "Carrot and Apple" },
+		{ prompt = "Which texture is yogurt most likely to be?", choices = { "Smooth", "Crunchy", "Chewy", "Bumpy" }, answer = "Smooth" },
+		{ prompt = "Which food is usually juicy?", choices = { "Orange", "Cracker", "Pretzel", "Dry cereal" }, answer = "Orange" },
+		{ prompt = "Which food is usually creamy?", choices = { "Applesauce", "Raw carrot", "Pretzel", "Cracker" }, answer = "Applesauce" },
+		{ prompt = "Which food is usually crisp?", choices = { "Apple", "Milk", "Soup", "Yogurt" }, answer = "Apple" },
+		{ prompt = "Which pair has two smooth foods?", choices = { "Yogurt and Applesauce", "Carrot and Apple", "Pretzel and Cracker", "Chicken and Rice" }, answer = "Yogurt and Applesauce" },
+		{ prompt = "Which food might feel soft and warm?", choices = { "Rice", "Ice cube", "Raw carrot", "Cracker" }, answer = "Rice" },
+		{ prompt = "Which food might feel cold and smooth?", choices = { "Yogurt", "Toast", "Beans", "Chicken" }, answer = "Yogurt" },
+	},
+	color_plate = {
+		{ prompt = "Choose a red food.", choices = { "Tomato", "Rice", "Milk", "Chicken" }, answer = "Tomato" },
+		{ prompt = "Choose a green food.", choices = { "Bread", "Broccoli", "Cheese", "Yogurt" }, answer = "Broccoli" },
+		{ prompt = "Choose an orange food.", choices = { "Carrot", "Yogurt", "Beans", "Rice" }, answer = "Carrot" },
+		{ prompt = "Choose a purple food.", choices = { "Eggplant", "Milk", "Rice", "Chicken" }, answer = "Eggplant" },
+		{ prompt = "Choose a yellow food.", choices = { "Corn", "Beans", "Broccoli", "Water" }, answer = "Corn" },
+		{ prompt = "Which plate has more colors?", choices = { "Tomato, carrot, broccoli", "Rice, milk, bread", "Chicken, pasta, crackers", "Yogurt, milk, rice" }, answer = "Tomato, carrot, broccoli" },
+		{ prompt = "Choose a blue food.", choices = { "Blueberry", "Rice", "Chicken", "Milk" }, answer = "Blueberry" },
+		{ prompt = "Choose a white food.", choices = { "Cauliflower", "Tomato", "Carrot", "Broccoli" }, answer = "Cauliflower" },
+		{ prompt = "Choose a rainbow pair.", choices = { "Strawberry and Broccoli", "Rice and Milk", "Bread and Pasta", "Chicken and Crackers" }, answer = "Strawberry and Broccoli" },
+		{ prompt = "Which food is usually green?", choices = { "Peas", "Banana", "Rice", "Chicken" }, answer = "Peas" },
+		{ prompt = "Which food is usually orange?", choices = { "Sweet Potato", "Milk", "Rice", "Yogurt" }, answer = "Sweet Potato" },
+		{ prompt = "Which set has red, yellow, and green?", choices = { "Tomato, corn, peas", "Milk, rice, bread", "Chicken, crackers, pasta", "Yogurt, cheese, rice" }, answer = "Tomato, corn, peas" },
+	},
+	memory_meal = {
+		{ prompt = "Find the matching pair for Apple.", choices = { "Apple", "Rice", "Chicken", "Milk" }, answer = "Apple" },
+		{ prompt = "Find the matching pair for Yogurt.", choices = { "Carrot", "Yogurt", "Beans", "Bread" }, answer = "Yogurt" },
+		{ prompt = "Find the matching pair for Broccoli.", choices = { "Milk", "Bread", "Broccoli", "Rice" }, answer = "Broccoli" },
+		{ prompt = "Remember the pair: carrot goes with...", choices = { "Carrot", "Soda", "Cookie", "Candy" }, answer = "Carrot" },
+		{ prompt = "Remember the pair: beans goes with...", choices = { "Beans", "Cake", "Cola", "Chips" }, answer = "Beans" },
+		{ prompt = "Which card matches Milk?", choices = { "Milk", "Apple", "Rice", "Candy" }, answer = "Milk" },
+		{ prompt = "Which card matches Banana?", choices = { "Banana", "Chicken", "Rice", "Soda" }, answer = "Banana" },
+		{ prompt = "Which card matches Carrot?", choices = { "Carrot", "Milk", "Bread", "Candy" }, answer = "Carrot" },
+		{ prompt = "Which card matches Rice?", choices = { "Rice", "Apple", "Broccoli", "Cola" }, answer = "Rice" },
+		{ prompt = "Remember the pair: strawberry goes with...", choices = { "Strawberry", "Cookie", "Candy", "Chips" }, answer = "Strawberry" },
+		{ prompt = "Remember the pair: cucumber goes with...", choices = { "Cucumber", "Soda", "Cake", "Cola" }, answer = "Cucumber" },
+		{ prompt = "Which card matches Cheese?", choices = { "Cheese", "Apple", "Rice", "Cookie" }, answer = "Cheese" },
+	},
+	food_maze = {
+		{ prompt = "Maze step 1: collect the fruit.", choices = { "Apple", "Candy", "Soda", "Cookie" }, answer = "Apple" },
+		{ prompt = "Maze step 2: collect the grain.", choices = { "Cookie", "Rice", "Cola", "Candy" }, answer = "Rice" },
+		{ prompt = "Maze step 3: collect the vegetable.", choices = { "Broccoli", "Cake", "Chips", "Soda" }, answer = "Broccoli" },
+		{ prompt = "Maze step 4: collect the protein.", choices = { "Beans", "Candy", "Cola", "Cupcake" }, answer = "Beans" },
+		{ prompt = "Maze step 5: collect the dairy food.", choices = { "Milk", "Soda", "Cookie", "Candy" }, answer = "Milk" },
+		{ prompt = "Final maze gate: which set makes a meal?", choices = { "Rice, beans, broccoli", "Soda, candy, chips", "Cake, cola, cookie", "Candy, soda, lollipop" }, answer = "Rice, beans, broccoli" },
+		{ prompt = "Maze bonus: collect something crunchy.", choices = { "Apple", "Soda", "Cake", "Cola" }, answer = "Apple" },
+		{ prompt = "Maze bonus: collect something smooth.", choices = { "Yogurt", "Chips", "Candy", "Cookie" }, answer = "Yogurt" },
+		{ prompt = "Maze bonus: collect an orange vegetable.", choices = { "Carrot", "Soda", "Bread", "Cake" }, answer = "Carrot" },
+		{ prompt = "Maze bonus: collect a plant protein.", choices = { "Beans", "Cola", "Candy", "Cookie" }, answer = "Beans" },
+		{ prompt = "Maze gate: what helps make a balanced lunch?", choices = { "Fruit, grain, protein", "Candy, soda, cake", "Cola, chips, cookie", "Lollipop, soda, candy" }, answer = "Fruit, grain, protein" },
+		{ prompt = "Maze exit: collect the fruit before the plate.", choices = { "Banana", "Soda", "Candy", "Cupcake" }, answer = "Banana" },
+	},
+	snack_tap = {
+		{ prompt = "Tap the healthy snack.", choices = { "Carrot Stick", "Candy", "Soda", "Cupcake" }, answer = "Carrot Stick" },
+		{ prompt = "Tap the healthy snack.", choices = { "Cookie", "Apple Slice", "Cupcake", "Cola" }, answer = "Apple Slice" },
+		{ prompt = "Tap the healthy snack.", choices = { "Yogurt Cup", "Cola", "Lollipop", "Candy" }, answer = "Yogurt Cup" },
+		{ prompt = "Tap the snack with protein.", choices = { "Cheese Cube", "Soda", "Candy", "Cookie" }, answer = "Cheese Cube" },
+		{ prompt = "Tap the crunchy vegetable snack.", choices = { "Cucumber Slice", "Cake", "Cola", "Chocolate" }, answer = "Cucumber Slice" },
+		{ prompt = "Tap the fruit snack.", choices = { "Banana", "Candy", "Soda", "Chips" }, answer = "Banana" },
+		{ prompt = "Tap the snack with dairy.", choices = { "Yogurt", "Soda", "Candy", "Chips" }, answer = "Yogurt" },
+		{ prompt = "Tap the garden snack.", choices = { "Snap Peas", "Cookie", "Cola", "Cupcake" }, answer = "Snap Peas" },
+		{ prompt = "Tap the snack with fruit.", choices = { "Grapes", "Candy", "Soda", "Cake" }, answer = "Grapes" },
+		{ prompt = "Tap the crunchy whole-grain snack.", choices = { "Whole Grain Crackers", "Lollipop", "Soda", "Candy" }, answer = "Whole Grain Crackers" },
+		{ prompt = "Tap the orange snack.", choices = { "Carrot Coins", "Cola", "Chocolate", "Cookie" }, answer = "Carrot Coins" },
+		{ prompt = "Tap the cool snack.", choices = { "Cucumber Slices", "Cake", "Candy", "Chips" }, answer = "Cucumber Slices" },
+	},
+	recipe_order = {
+		{ prompt = "Fruit bowl: what comes first?", choices = { "Wash fruit", "Eat", "Add spoon", "Add soda" }, answer = "Wash fruit" },
+		{ prompt = "Yogurt parfait: what comes after yogurt?", choices = { "Add berries", "Throw away bowl", "Add soda", "Close eyes" }, answer = "Add berries" },
+		{ prompt = "Rice bowl: what makes it balanced?", choices = { "Add vegetables", "Add candy", "Add soda", "Add lollipop" }, answer = "Add vegetables" },
+		{ prompt = "Simple sandwich: what comes before eating?", choices = { "Put fillings inside", "Throw away plate", "Add soda", "Hide spoon" }, answer = "Put fillings inside" },
+		{ prompt = "Smoothie order: after fruit, add...", choices = { "Yogurt or milk", "Candy wrappers", "Soda", "Chips" }, answer = "Yogurt or milk" },
+		{ prompt = "Recipe check: which step is safest first?", choices = { "Wash hands", "Run away", "Eat wrappers", "Spill drink" }, answer = "Wash hands" },
+		{ prompt = "Toast recipe: what goes on before toppings?", choices = { "Toast the bread", "Add soda", "Hide the plate", "Eat wrapper" }, answer = "Toast the bread" },
+		{ prompt = "Veggie sticks: what should you do first?", choices = { "Wash vegetables", "Add candy", "Pour cola", "Close bowl" }, answer = "Wash vegetables" },
+		{ prompt = "Rice bowl: what comes after rice?", choices = { "Add protein", "Add soda", "Add lollipop", "Add wrapper" }, answer = "Add protein" },
+		{ prompt = "Fruit snack: after washing fruit, what next?", choices = { "Slice or serve it", "Add cola", "Throw spoon", "Add chips" }, answer = "Slice or serve it" },
+		{ prompt = "Parfait order: yogurt, berries, then...", choices = { "Granola", "Soda", "Candy", "Wrapper" }, answer = "Granola" },
+		{ prompt = "Clean-up step: after eating, what helps?", choices = { "Put dishes away", "Hide food", "Spill water", "Throw spoon" }, answer = "Put dishes away" },
+	},
+	nutrient_quest = {
+		{ prompt = "Which food gives Eye Power?", choices = { "Carrot", "Candy", "Soda", "Cookie" }, answer = "Carrot" },
+		{ prompt = "Which food gives Bone Power?", choices = { "Milk", "Cookie", "Cola", "Candy" }, answer = "Milk" },
+		{ prompt = "Which food gives Energy Power?", choices = { "Oatmeal", "Candy", "Soda", "Cupcake" }, answer = "Oatmeal" },
+		{ prompt = "Which food gives Muscle Power?", choices = { "Beans", "Soda", "Candy", "Cookie" }, answer = "Beans" },
+		{ prompt = "Which food gives Shield Power?", choices = { "Orange", "Cola", "Candy", "Cake" }, answer = "Orange" },
+		{ prompt = "Which quest set has three body powers?", choices = { "Carrot, milk, beans", "Soda, candy, cake", "Cookie, cola, chips", "Candy, soda, lollipop" }, answer = "Carrot, milk, beans" },
+		{ prompt = "Which food gives Fiber Power?", choices = { "Apple", "Soda", "Candy", "Cake" }, answer = "Apple" },
+		{ prompt = "Which food gives Green Power?", choices = { "Broccoli", "Cookie", "Cola", "Candy" }, answer = "Broccoli" },
+		{ prompt = "Which food gives Protein Power?", choices = { "Egg", "Soda", "Candy", "Cake" }, answer = "Egg" },
+		{ prompt = "Which food gives Hydration Helper power?", choices = { "Watermelon", "Cookie", "Chips", "Candy" }, answer = "Watermelon" },
+		{ prompt = "Which pair gives Bone and Muscle Power?", choices = { "Milk and Beans", "Soda and Candy", "Cookie and Cola", "Cake and Chips" }, answer = "Milk and Beans" },
+		{ prompt = "Which set is best for Energy Quest?", choices = { "Oatmeal, banana, milk", "Soda, candy, cake", "Cola, chips, cookie", "Candy, soda, lollipop" }, answer = "Oatmeal, banana, milk" },
+	},
+}
+
+local show_intro
+local show_home
+local show_games
+local show_shop
+local show_customize
+local show_parent
+local show_game_start
+local show_game_round
+local show_game_complete
+local show_game_transition
+local sync_sensory_mode
+local button_color
+local tile_icon
+
+local function safe_get_node(id)
+	local ok, node = pcall(gui.get_node, id)
+	if ok then
+		return node
+	end
+	return nil
+end
+
+local function add_box(self, id, x, y, w, h, color)
+	local node = gui.new_box_node(vmath.vector3(x, y, 0), vmath.vector3(w, h, 0))
+	gui.set_id(node, id)
+	gui.set_color(node, color)
+	self.nodes[#self.nodes + 1] = node
+	return node
+end
+
+local function add_text(self, id, text, x, y, w, h, color, scale)
+	local node = gui.new_text_node(vmath.vector3(x, y, 0), text)
+	gui.set_id(node, id)
+	gui.set_font(node, "text")
+	gui.set_size(node, vmath.vector3(w, h, 0))
+	gui.set_color(node, color or COLORS.text)
+	gui.set_line_break(node, true)
+	gui.set_scale(node, vmath.vector3(scale or 1, scale or 1, 1))
+	self.nodes[#self.nodes + 1] = node
+	return node
+end
+
+local function add_image(self, id, texture, x, y, w, h)
+	local node = add_box(self, id, x, y, w, h, COLORS.white)
+	gui.set_texture(node, texture)
+	return node
+end
+
+local function animate_bob(self, node, x, y, amount, duration, delay)
+	if self.low_stim then
+		return
+	end
+	pcall(gui.animate, node, gui.PROP_POSITION, vmath.vector3(x, y + amount, 0), gui.EASING_INOUTSINE, duration, delay or 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
+end
+
+local function animate_pulse(self, node, scale, duration, delay)
+	if self.low_stim then
+		return
+	end
+	pcall(gui.animate, node, gui.PROP_SCALE, vmath.vector3(scale, scale, 1), gui.EASING_INOUTSINE, duration, delay or 0, nil, gui.PLAYBACK_LOOP_PINGPONG)
+end
+
+local function add_floating_image(self, id, texture, x, y, w, h, amount, duration, delay)
+	local node = add_image(self, id, texture, x, y, w, h)
+	animate_bob(self, node, x, y, amount or 12, duration or 1.8, delay or 0)
+	return node
+end
+
+local function add_screen_background(self)
+	add_image(self, "screen_bg_art", "bito_lab_background", 640, 360, 1280, 720)
+	add_box(self, "screen_soft_wash", 640, 360, 1280, 720, vmath.vector4(1, 1, 1, self.low_stim and 0.34 or 0.14))
+end
+
+local function add_glass_card(self, id, x, y, w, h, color)
+	add_box(self, id .. "_shadow", x + 8, y - 10, w, h, COLORS.shadow)
+	add_box(self, id .. "_base", x, y, w, h, color or COLORS.glass)
+	add_box(self, id .. "_shine", x, y + (h * 0.34), w * 0.86, math.max(8, h * 0.12), vmath.vector4(1, 1, 1, 0.22))
+end
+
+local function add_energy_tube(self, id, x, y, w, h, pct)
+	local clamped = math.max(0, math.min(100, pct or 0))
+	add_box(self, id .. "_shadow", x + 5, y - 6, w, h, COLORS.shadow)
+	add_box(self, id .. "_shell", x, y, w, h, vmath.vector4(1, 1, 1, 0.72))
+	self.energy_fill_node = add_box(self, id .. "_fill", x - (w / 2) + ((w * clamped / 100) / 2), y, math.max(10, w * clamped / 100), h - 10, COLORS.tube)
+	add_box(self, id .. "_shine", x, y + (h * 0.16), w * 0.88, math.max(4, h * 0.15), vmath.vector4(1, 1, 1, 0.35))
+	return self.energy_fill_node
+end
+
+local function add_accent_ribbon(self)
+	add_box(self, "ribbon_top_leaf", 220, 704, 440, 32, COLORS.leaf)
+	add_box(self, "ribbon_top_sky", 640, 704, 400, 32, COLORS.sky)
+	add_box(self, "ribbon_top_coral", 1040, 704, 480, 32, COLORS.coral)
+	add_box(self, "ribbon_bottom_gold", 230, 16, 460, 32, COLORS.gold)
+	add_box(self, "ribbon_bottom_mint", 680, 16, 440, 32, COLORS.mint)
+	add_box(self, "ribbon_bottom_pink", 1070, 16, 420, 32, COLORS.pink)
+end
+
+local function clear_screen(self)
+	sync_sensory_mode(self)
+	for _, node in ipairs(self.nodes) do
+		gui.delete_node(node)
+	end
+	self.nodes = {}
+	self.buttons = {}
+end
+
+local function add_button(self, id, label, x, y, w, h, color, action)
+	add_box(self, id .. "_button_shadow", x + 4, y - 7, w, h, COLORS.shadow)
+	local box = add_box(self, id .. "_box", x, y, w, h, color)
+	add_box(self, id .. "_button_shine", x, y + (h * 0.24), w * 0.82, math.max(6, h * 0.16), vmath.vector4(1, 1, 1, 0.28))
+	add_text(self, id .. "_label", label, x, y - 2, w - 20, h - 10, COLORS.white, 0.88)
+	animate_pulse(self, box, 1.025, 1.4, (#self.buttons % 4) * 0.08)
+	self.buttons[#self.buttons + 1] = { id = id, node = box, action = action }
+	return box
+end
+
+local function game_icon(game_id)
+	local icons = {
+		food_match = "food_apple",
+		garden_catch = "food_strawberry",
+		plate_builder = "plate_balanced",
+		texture_sort = "food_carrot",
+		color_plate = "food_broccoli",
+		memory_meal = "food_yogurt",
+		food_maze = "food_rice",
+		snack_tap = "food_banana",
+		recipe_order = "food_beans",
+		nutrient_quest = "food_milk",
+	}
+	return icons[game_id] or "icon_games"
+end
+
+local function add_arcade_card(self, game, index, x, y)
+	local ready = self.tokens >= game.cost
+	local cabinet_color = ready and button_color(index) or COLORS.leaf_dark
+	local card = add_box(self, "arcade_card_" .. game.id, x, y, 210, 142, cabinet_color)
+	animate_pulse(self, card, 1.02, 1.5, index * 0.04)
+	add_box(self, "arcade_screen_" .. game.id, x, y + 18, 174, 74, ready and COLORS.card or COLORS.panel)
+	add_floating_image(self, "arcade_icon_" .. game.id, game_icon(game.id), x - 56, y + 20, 52, 52, 5, 1.4, index * 0.04)
+	add_text(self, "arcade_name_" .. game.id, game.name, x + 34, y + 33, 104, 34, COLORS.leaf_dark, 0.62)
+	add_text(self, "arcade_meta_" .. game.id, game.duration .. "s  +" .. game.point_reward .. " pts", x + 34, y + 2, 112, 24, COLORS.text, 0.52)
+	add_box(self, "arcade_coin_slot_" .. game.id, x - 56, y - 52, 74, 26, COLORS.gold)
+	add_text(self, "arcade_cost_" .. game.id, game.cost .. " token", x - 56, y - 55, 66, 20, COLORS.leaf_dark, 0.46)
+	add_text(self, "arcade_ready_" .. game.id, ready and "READY" or "LOCKED", x + 42, y - 54, 96, 22, COLORS.white, 0.54)
+	self.buttons[#self.buttons + 1] = {
+		id = "play_" .. game.id,
+		node = card,
+		action = function()
+			show_game_start(self, game.id)
+		end,
+	}
+end
+
+local function item_icon(item)
+	local icons = {
+		bito_core = "buddy_food",
+		bito_armor = "icon_upgrade_wrench",
+		bito_trail = "icon_points_star",
+		buddy = "buddy_food",
+		plate = "plate_balanced",
+		food_fact = "icon_glossary",
+		garden = "decor_leaf",
+		title = "icon_rewards",
+		celebration = "decor_star",
+	}
+	return icons[item.category] or "icon_rewards"
+end
+
+function tile_icon(label)
+	local text = string.lower(label or "")
+	if string.find(text, "apple") then return "food_apple" end
+	if string.find(text, "banana") then return "food_banana" end
+	if string.find(text, "broccoli") or string.find(text, "peas") or string.find(text, "spinach") or string.find(text, "lettuce") then return "food_broccoli" end
+	if string.find(text, "carrot") or string.find(text, "pumpkin") or string.find(text, "sweet potato") then return "food_carrot" end
+	if string.find(text, "yogurt") or string.find(text, "milk") or string.find(text, "cheese") then return "food_milk" end
+	if string.find(text, "rice") or string.find(text, "oatmeal") or string.find(text, "bread") or string.find(text, "grain") then return "food_rice" end
+	if string.find(text, "chicken") or string.find(text, "egg") or string.find(text, "protein") then return "food_chicken" end
+	if string.find(text, "beans") then return "food_beans" end
+	if string.find(text, "strawberry") or string.find(text, "blueberry") or string.find(text, "grape") then return "food_strawberry" end
+	if string.find(text, "token") then return "icon_arcade_token" end
+	if string.find(text, "power") then return "icon_points_star" end
+	return "icon_heart_food"
+end
+
+local HEALTHY_FALLING_FOODS = {
+	{ name = "Apple", icon = "food_apple" },
+	{ name = "Banana", icon = "food_banana" },
+	{ name = "Carrot", icon = "food_carrot" },
+	{ name = "Broccoli", icon = "food_broccoli" },
+	{ name = "Strawberry", icon = "food_strawberry" },
+	{ name = "Milk", icon = "food_milk" },
+	{ name = "Beans", icon = "food_beans" },
+}
+
+local DESSERT_DECOYS = {
+	{ name = "Cupcake", icon = "icon_heart_food" },
+	{ name = "Candy", icon = "icon_points_star" },
+	{ name = "Soda", icon = "icon_arcade_token" },
+}
+
+local function spawn_garden_catch_item(self, active)
+	local healthy = math.random() < 0.72
+	local list = healthy and HEALTHY_FALLING_FOODS or DESSERT_DECOYS
+	local item = list[math.random(#list)]
+	local x = math.random(170, 1110)
+	local y = 584
+	local color = healthy and COLORS.leaf or COLORS.coral
+	local node = add_box(self, "falling_food_" .. active.spawn_count, x, y, 88, 88, color)
+	local icon = add_image(self, "falling_icon_" .. active.spawn_count, item.icon, x, y + 9, 48, 48)
+	local label = add_text(self, "falling_label_" .. active.spawn_count, healthy and "GOOD" or "AVOID", x, y - 30, 78, 20, COLORS.white, 0.44)
+	active.falling[#active.falling + 1] = {
+		node = node,
+		icon = icon,
+		label = label,
+		x = x,
+		y = y,
+		speed = healthy and math.random(120, 180) or math.random(150, 220),
+		healthy = healthy,
+		name = item.name,
+		caught = false,
+	}
+	active.spawn_count = active.spawn_count + 1
+end
+
+local function add_upgrade_cabinet(self, item, index, x, y)
+	local owned = shop.owned(item.id)
+	local affordable = self.points >= item.cost
+	local state_text = owned and "OWNED" or (affordable and "BUY" or "LOCKED")
+	local cabinet_color = owned and COLORS.leaf or (affordable and button_color(index) or COLORS.leaf_dark)
+	local card = add_box(self, "upgrade_card_" .. item.id, x, y, 220, 134, cabinet_color)
+	animate_pulse(self, card, 1.018, 1.6, index * 0.05)
+	add_box(self, "upgrade_screen_" .. item.id, x, y + 18, 184, 72, owned and COLORS.mint or COLORS.card)
+	add_floating_image(self, "upgrade_icon_" .. item.id, item_icon(item), x - 66, y + 21, 50, 50, 5, 1.4, index * 0.04)
+	add_text(self, "upgrade_name_" .. item.id, item.name, x + 36, y + 34, 118, 32, COLORS.leaf_dark, 0.58)
+	add_text(self, "upgrade_desc_" .. item.id, item.desc, x + 36, y + 4, 122, 38, COLORS.text, 0.42)
+	add_box(self, "upgrade_slot_" .. item.id, x - 62, y - 50, 82, 26, COLORS.gold)
+	add_text(self, "upgrade_cost_" .. item.id, item.cost .. " pts", x - 62, y - 53, 72, 20, COLORS.leaf_dark, 0.46)
+	add_text(self, "upgrade_state_" .. item.id, state_text, x + 44, y - 53, 96, 22, COLORS.white, 0.52)
+	self.buttons[#self.buttons + 1] = {
+		id = "buy_" .. item.id,
+		node = card,
+		action = function()
+			if owned then
+				local ok = shop.equip(item.id)
+				self.shop_feedback = ok and (item.name .. " equipped on Bito.") or (item.name .. " is already unlocked.")
+				show_shop(self)
+				return
+			end
+			local ok, result = shop.buy(item.id)
+			if ok then
+				shop.equip(item.id)
+				sync_wallet(self)
+				self.shop_feedback = item.name .. " bought! Points left: " .. self.points
+				show_shop(self)
+			else
+				self.shop_feedback = result == "not_enough_points" and ("Need " .. item.cost .. " points for " .. item.name .. ".") or "This upgrade is not available right now."
+				show_shop(self)
+			end
+		end,
+	}
+end
+
+local function equipped_items_text()
+	local s = storage.get_state()
+	local equipped = s and s.inventory and s.inventory.equipped or {}
+	local lines = {
+		"Core: " .. (equipped.bito_core or "none"),
+		"Armor: " .. (equipped.bito_armor or "none"),
+		"Trail: " .. (equipped.bito_trail or "none"),
+		"Title: " .. (equipped.title or "none"),
+		"Celebration: " .. (equipped.celebration or "none"),
+	}
+	return table.concat(lines, "\n")
+end
+
+local function is_bito_custom_item(item)
+	return item.category == "bito_core"
+		or item.category == "bito_armor"
+		or item.category == "bito_trail"
+		or item.category == "title"
+		or item.category == "celebration"
+end
+
+local function add_custom_item_card(self, item, index, x, y)
+	local s = storage.get_state()
+	local equipped = s and s.inventory and s.inventory.equipped or {}
+	local is_equipped = equipped[item.category] == item.id
+	local color = is_equipped and COLORS.leaf or button_color(index)
+	local card = add_box(self, "custom_card_" .. item.id, x, y, 230, 86, color)
+	animate_pulse(self, card, 1.018, 1.4, index * 0.04)
+	add_floating_image(self, "custom_icon_" .. item.id, item_icon(item), x - 82, y + 3, 52, 52, 5, 1.4, index * 0.03)
+	add_text(self, "custom_name_" .. item.id, item.name, x + 28, y + 17, 138, 28, COLORS.white, 0.56)
+	add_text(self, "custom_state_" .. item.id, is_equipped and "EQUIPPED" or "TAP TO EQUIP", x + 28, y - 18, 138, 24, COLORS.white, 0.46)
+	self.buttons[#self.buttons + 1] = {
+		id = "equip_" .. item.id,
+		node = card,
+		action = function()
+			local ok = shop.equip(item.id)
+			show_message(self, ok and "Bito Updated" or "Could Not Equip", ok and (item.name .. " is now active.") or "This item cannot be equipped yet.", function() show_customize(self) end)
+		end,
+	}
+end
+
+local function sync_wallet(self)
+	local ok_points, points = pcall(rewards.get_points)
+	local ok_tokens, tokens = pcall(rewards.get_tokens)
+	self.points = ok_points and points or self.points or 0
+	self.tokens = ok_tokens and tokens or self.tokens or 0
+end
+
+function sync_sensory_mode(self)
+	local ok, state = pcall(storage.get_state)
+	local mode = ok and state and state.child and state.child.sensory_mode or "bright"
+	self.low_stim = mode == "low_stim"
+	COLORS = self.low_stim and LOW_STIM_COLORS or NORMAL_COLORS
+end
+
+local function set_sensory_mode(self, low_stim)
+	local s = storage.get_state()
+	s.child.sensory_mode = low_stim and "low_stim" or "bright"
+	storage.save_state(s)
+	sync_sensory_mode(self)
+end
+
+local function update_wallet(self)
+	if self.wallet_node then
+		gui.set_text(self.wallet_node, "Points: " .. self.points .. "    Tokens: " .. self.tokens)
+	end
+end
+
+local function progress_path(progress)
+	local filled = math.floor((progress or 0) / 10)
+	local path = ""
+	for i = 1, 10 do
+		path = path .. (i <= filled and "=" or "-")
+	end
+	return "Food path: [" .. path .. "] " .. (progress or 0) .. "%"
+end
+
+local function steps_text(steps)
+	steps = steps or {}
+	local function mark(key)
+		return steps[key] and "done" or "next"
+	end
+	return "Steps: Look " .. mark("look") .. " | Touch/Smell " .. mark("interact") .. " | Taste " .. mark("taste") .. " | Eat " .. mark("complete")
+end
+
+local function parent_insight_text()
+	local ok, s = pcall(storage.get_state)
+	if not ok or not s then
+		return "Parent insights will appear after the first food challenge."
+	end
+	local texture_counts = {}
+	local color_counts = {}
+	for _, food in ipairs(s.glossary or {}) do
+		local completed = food.steps and (food.steps.complete or 0) or 0
+		if completed > 0 then
+			texture_counts[food.texture or "Unknown"] = (texture_counts[food.texture or "Unknown"] or 0) + completed
+			color_counts[food.color or "Unknown"] = (color_counts[food.color or "Unknown"] or 0) + completed
+		end
+	end
+	local top_texture, top_texture_count = "not enough data yet", 0
+	for texture, count in pairs(texture_counts) do
+		if count > top_texture_count then
+			top_texture = texture
+			top_texture_count = count
+		end
+	end
+	local top_color, top_color_count = "not enough data yet", 0
+	for color, count in pairs(color_counts) do
+		if count > top_color_count then
+			top_color = color
+			top_color_count = count
+		end
+	end
+	return "Food IEP snapshot:\n\nStrongest texture pattern: " .. top_texture .. "\nStrongest color pattern: " .. top_color .. "\nMeals completed: " .. (s.metrics.meals_completed or 0) .. "\nFoods introduced: " .. (s.metrics.new_foods or 0)
+end
+
+local function bridge_round(food)
+	if not food then
+		return nil
+	end
+	local other = food == "Carrot" and "Apple" or "Carrot"
+	return {
+		prompt = "Plate power-up: choose the food you just practiced.",
+		choices = { food, other, "Soda" },
+		answer = food,
+	}
+end
+
+function button_color(index)
+	local colors = { COLORS.leaf, COLORS.blue, COLORS.coral, COLORS.gold, COLORS.purple, COLORS.pink }
+	return colors[((index - 1) % #colors) + 1]
+end
+
+local function show_message(self, title, message, back_action)
+	clear_screen(self)
+	self.screen = "message"
+	add_box(self, "bg", 640, 360, 1280, 720, COLORS.bg)
+	add_box(self, "message_panel", 640, 380, 780, 340, COLORS.panel)
+	add_text(self, "message_title", title, 640, 485, 680, 58, COLORS.leaf_dark, 1.6)
+	add_text(self, "message_body", message, 640, 390, 640, 120, COLORS.text, 1)
+	add_button(self, "message_back", "OK", 640, 260, 240, 52, COLORS.leaf, back_action or function()
+		show_games(self)
+	end)
+end
+
+function show_intro(self)
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "intro"
+	add_screen_background(self)
+	if not self.low_stim then
+		add_image(self, "intro_confetti_left", "decor_confetti", 170, 615, 100, 100)
+		add_image(self, "intro_confetti_right", "decor_confetti", 1110, 615, 100, 100)
+	end
+	add_glass_card(self, "hero_panel", 640, 400, 900, 445, COLORS.glass)
+	add_floating_image(self, "intro_buddy", "bito_robot", 260, 455, 220, 330, 16, 2.2, 0.1)
+	add_floating_image(self, "intro_plate", "plate_balanced", 1015, 535, 154, 154, 12, 2.4, 0.25)
+	add_floating_image(self, "intro_apple", "food_apple", 258, 332, 82, 82, 14, 1.7, 0.15)
+	add_floating_image(self, "intro_carrot", "food_carrot", 350, 275, 78, 78, 11, 1.9, 0.35)
+	add_floating_image(self, "intro_broccoli", "food_broccoli", 935, 300, 82, 82, 13, 1.8, 0.2)
+	add_floating_image(self, "intro_strawberry", "food_strawberry", 1030, 350, 76, 76, 15, 1.6, 0.45)
+	add_floating_image(self, "intro_star_1", "decor_star", 405, 595, 58, 58, 9, 1.3, 0.2)
+	add_floating_image(self, "intro_leaf_1", "decor_leaf", 875, 594, 62, 62, 10, 1.5, 0.4)
+	add_text(self, "view_title", "Healthy Eaters", 640, 600, 640, 70, COLORS.leaf_dark, 2.05)
+	add_text(self, "tagline", "Eat healthy food. Earn tokens. Play food games. Unlock bright rewards.", 640, 526, 610, 70, COLORS.text, 1.05)
+	add_text(self, "welcome", "Pick a place to start.", 640, 458, 520, 36, COLORS.leaf, 1.15)
+	add_button(self, "home", "Go To Home", 640, 385, 310, 58, COLORS.leaf, function() show_home(self) end)
+	add_button(self, "meal", "Start Food Challenge", 640, 315, 310, 58, COLORS.coral, function()
+		show_home(self)
+		msg.post("#script", "start_meal")
+	end)
+	add_button(self, "games", "Food Games", 475, 238, 255, 52, COLORS.blue, function() show_games(self) end)
+	add_button(self, "shop", "Points Arcade", 805, 238, 255, 52, COLORS.gold, function() show_shop(self) end)
+	add_button(self, "parent", "Parent Info", 640, 170, 250, 48, COLORS.purple, function() show_parent(self) end)
+	self.wallet_node = add_text(self, "view_wallet", "", 640, 94, 500, 34, COLORS.leaf_dark, 1)
+	update_wallet(self)
+end
+
+function show_home(self)
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "home"
+	add_screen_background(self)
+	add_floating_image(self, "home_leaf_1", "decor_leaf", 150, 626, 72, 72, 8, 1.8, 0)
+	add_floating_image(self, "home_star_1", "decor_star", 1130, 626, 68, 68, 10, 1.6, 0.2)
+	add_text(self, "view_title", "Bito the Flavor-Bot", 640, 650, 760, 58, COLORS.leaf_dark, 1.86)
+	add_text(self, "summary", "Recharge Bito with food practice, finish missions, and unlock stronger Flavor-Bot forms.", 640, 602, 820, 46, COLORS.text, 0.9)
+	add_glass_card(self, "wallet_card", 640, 552, 500, 48, COLORS.glass)
+	add_floating_image(self, "wallet_points_icon", "icon_points_star", 438, 552, 38, 38, 3, 1.5, 0)
+	add_floating_image(self, "wallet_token_icon", "icon_arcade_token", 642, 552, 38, 38, 3, 1.5, 0.15)
+	self.wallet_node = add_text(self, "view_wallet", "", 660, 552, 420, 30, COLORS.leaf_dark, 0.82)
+	update_wallet(self)
+
+	add_glass_card(self, "bito_stage", 640, 334, 454, 350, COLORS.glass)
+	add_floating_image(self, "bito_core", "bito_robot", 640, 356, 275, 410, 18, 2.0, 0.1)
+	self.bito_status_node = add_text(self, "bito_name", self.bito_status_text or "Bito: Scout L1", 640, 158, 390, 34, COLORS.leaf_dark, 0.86)
+
+	add_glass_card(self, "mission_card", 250, 410, 370, 250, COLORS.glass)
+	add_text(self, "mission_title", "Current Mission", 250, 488, 310, 34, COLORS.leaf_dark, 1.04)
+	self.bito_speech_node = add_text(self, "bito_speech", self.bito_speech or "Bito is checking today's mission.", 250, 412, 310, 108, COLORS.text, 0.82)
+	add_energy_tube(self, "energy_tube", 250, 322, 280, 34, self.bito_energy or 50)
+	self.energy_label_node = add_text(self, "energy_label", "Energy " .. (self.bito_energy or 50) .. "%", 250, 282, 310, 28, COLORS.leaf_dark, 0.78)
+
+	add_glass_card(self, "meal_card", 1030, 405, 360, 280, COLORS.glass)
+	add_floating_image(self, "home_plate", "plate_balanced", 935, 494, 88, 88, 8, 1.8, 0.1)
+	add_text(self, "meal_title", "Recharge Station", 1040, 484, 250, 34, COLORS.leaf_dark, 1.0)
+	self.meal_status_node = add_text(self, "view_meal_status", self.meal_status, 1030, 424, 300, 54, COLORS.text, 0.78)
+	self.progress_node = add_text(self, "view_progress", self.progress_text, 1030, 374, 300, 32, COLORS.coral, 0.76)
+	add_floating_image(self, "step_look_icon", "icon_step_look", 925, 328, 54, 54, 5, 1.5, 0)
+	add_floating_image(self, "step_touch_icon", "icon_step_touch", 1030, 328, 54, 54, 5, 1.5, 0.15)
+	add_floating_image(self, "step_taste_icon", "icon_step_taste", 1135, 328, 54, 54, 5, 1.5, 0.3)
+	self.step_node = add_text(self, "view_steps", steps_text(self.steps), 1030, 282, 310, 42, COLORS.leaf_dark, 0.58)
+	add_button(self, "start_meal", "Recharge With Food", 1030, 226, 260, 50, COLORS.coral, function() msg.post("#script", "start_meal") end)
+
+	add_glass_card(self, "action_strip", 640, 78, 840, 86, COLORS.glass)
+	add_button(self, "games", "Mission Games", 280, 98, 190, 50, COLORS.blue, function() show_games(self) end)
+	add_button(self, "customize", "Customize", 520, 98, 190, 50, COLORS.mint, function() show_customize(self) end)
+	add_button(self, "shop", "Bot Upgrades", 760, 98, 190, 50, COLORS.gold, function() show_shop(self) end)
+	add_button(self, "parent", "Parent Panel", 1000, 98, 190, 50, COLORS.purple, function() show_parent(self) end)
+end
+
+function show_games(self)
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "games"
+	add_screen_background(self)
+	add_text(self, "view_title", "Food Arcade", 640, 662, 700, 52, COLORS.leaf_dark, 1.65)
+	add_floating_image(self, "games_icon", "icon_games", 360, 662, 76, 76, 8, 1.4, 0)
+	add_floating_image(self, "token_icon", "icon_token", 920, 662, 66, 66, 8, 1.3, 0.2)
+	self.wallet_node = add_text(self, "view_wallet", "", 640, 616, 520, 34, COLORS.leaf_dark, 1)
+	update_wallet(self)
+	add_glass_card(self, "arcade_marquee", 640, 570, 900, 52, COLORS.glass)
+	add_text(self, "games_hint", "Choose a cabinet. Tokens open longer food missions for Bito.", 640, 570, 800, 34, COLORS.text, 0.86)
+	add_floating_image(self, "arcade_star_left", "decor_star", 225, 570, 42, 42, 7, 1.4, 0)
+	add_floating_image(self, "arcade_star_right", "decor_star", 1055, 570, 42, 42, 7, 1.4, 0.2)
+
+	add_glass_card(self, "arcade_floor", 640, 318, 1120, 348, vmath.vector4(0.74, 0.96, 0.88, 0.72))
+	for i, game in ipairs(games.all()) do
+		local col = (i - 1) % 5
+		local row = math.floor((i - 1) / 5)
+		local x = 190 + col * 225
+		local y = 406 - row * 168
+		add_arcade_card(self, game, i, x, y)
+	end
+
+	add_glass_card(self, "arcade_tip", 640, 88, 700, 50, COLORS.glass)
+	add_text(self, "arcade_tip_text", "Finish a recharge meal to earn tokens, then come back for another cabinet.", 640, 88, 630, 30, COLORS.text, 0.7)
+	add_button(self, "home", "Bito Home", 360, 34, 200, 42, COLORS.leaf, function() show_home(self) end)
+	add_button(self, "shop", "Bot Upgrades", 640, 34, 200, 42, COLORS.gold, function() show_shop(self) end)
+	add_button(self, "meal", "Recharge", 920, 34, 200, 42, COLORS.coral, function()
+		show_home(self)
+		msg.post("#script", "start_meal")
+	end)
+end
+
+function show_game_start(self, game_id)
+	sync_wallet(self)
+	local game = games.get(game_id)
+	if not game then
+		show_message(self, "Game Missing", "I could not find that game.", function() show_games(self) end)
+		return
+	end
+	clear_screen(self)
+	self.screen = "game_start"
+	add_screen_background(self)
+	add_glass_card(self, "start_panel", 640, 390, 820, 390, COLORS.glass)
+	add_text(self, "game_title", game.name, 640, 525, 720, 54, COLORS.leaf_dark, 1.65)
+	local bridge = self.last_food and ("\nPlate bridge: " .. self.last_food .. " can show up as a power-up.") or ""
+	add_text(self, "game_desc", game.desc .. bridge .. "\n\nLonger challenge: about " .. game.duration .. " seconds\nCost: " .. game.cost .. " token(s)\nReward: +" .. game.point_reward .. " points", 640, 410, 660, 150, COLORS.text, 1)
+	self.wallet_node = add_text(self, "view_wallet", "", 640, 235, 520, 34, COLORS.leaf_dark, 1)
+	update_wallet(self)
+	add_button(self, "start_game", "Play", 500, 160, 220, 52, COLORS.coral, function()
+		local session, err = games.start_session(game_id)
+		if not session then
+			show_message(self, "Need Tokens", "Finish a food challenge first to earn game tokens.", function() show_home(self) end)
+			return
+		end
+		local rounds = GAME_ROUNDS[game_id] or {}
+		local plate_round = bridge_round(self.last_food)
+		if plate_round then
+			local bridged_rounds = { plate_round }
+			for _, round in ipairs(rounds) do
+				bridged_rounds[#bridged_rounds + 1] = round
+			end
+			rounds = bridged_rounds
+		end
+		self.active_game = {
+			session = session,
+			rounds = rounds,
+			round = 1,
+			score = 0,
+			lives = 3,
+			target_score = game_id == "garden_catch" and 15 or 8,
+			time_left = math.min(90, math.max(45, session.game.duration or 60)),
+			mode = game_id == "garden_catch" and "garden_catch" or "action",
+			basket_x = 640,
+			falling = {},
+			spawn_timer = 0,
+			spawn_count = 1,
+			garden_rendered = false,
+			feedback = "",
+		}
+		sync_wallet(self)
+		show_game_transition(self, 1)
+	end)
+	add_button(self, "back_games", "Back", 780, 160, 220, 52, COLORS.leaf, function() show_games(self) end)
+end
+
+function show_game_transition(self, step)
+	clear_screen(self)
+	self.screen = "game_transition"
+	local words = { "Ready", "Set", "Go" }
+	add_screen_background(self)
+	add_glass_card(self, "transition_panel", 640, 380, 700, 300, COLORS.glass)
+	add_text(self, "transition_title", words[step] or "Go", 640, 425, 560, 90, COLORS.leaf_dark, 2.0)
+	add_text(self, "transition_copy", "Switching from meal time to game time.", 640, 335, 560, 40, COLORS.text, 1)
+	timer.delay(self.low_stim and 0.9 or 0.55, false, function()
+		if step < 3 then
+			show_game_transition(self, step + 1)
+		else
+			show_game_round(self)
+		end
+	end)
+end
+
+function show_game_round(self)
+	local active = self.active_game
+	if not active or not active.rounds then
+		show_games(self)
+		return
+	end
+	if active.mode == "garden_catch" then
+		if active.score >= active.target_score or active.lives <= 0 or active.time_left <= 0 then
+			show_game_complete(self)
+			return
+		end
+		clear_screen(self)
+		self.screen = "game_round"
+		add_screen_background(self)
+		add_text(self, "game_title", "Garden Catch", 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+		self.action_hud_node = add_text(self, "action_hud", "Healthy caught " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 900, 36, COLORS.leaf, 0.9)
+		add_glass_card(self, "garden_arena", 640, 355, 1000, 420, COLORS.glass)
+		add_box(self, "good_lane", 335, 548, 330, 58, vmath.vector4(0.44, 0.86, 0.58, 0.8))
+		add_text(self, "good_label", "CATCH HEALTHY FOODS", 335, 548, 300, 28, COLORS.white, 0.68)
+		add_box(self, "bad_lane", 945, 548, 330, 58, vmath.vector4(1.0, 0.36, 0.25, 0.78))
+		add_text(self, "bad_label", "AVOID DESSERTS", 945, 548, 300, 28, COLORS.white, 0.68)
+		add_text(self, "garden_feedback", "Click or drag to move the basket. Catch GOOD foods. Let AVOID desserts fall past.", 640, 500, 820, 32, COLORS.text, 0.78)
+		self.basket_node = add_box(self, "basket", active.basket_x, 105, 170, 54, COLORS.gold)
+		add_box(self, "basket_mouth", active.basket_x, 130, 190, 20, COLORS.coral)
+		self.basket_label_node = add_text(self, "basket_label", "BASKET", active.basket_x, 103, 130, 24, COLORS.leaf_dark, 0.56)
+		active.garden_rendered = true
+		active.falling = {}
+		active.spawn_timer = 0
+		active.spawn_count = 1
+		for i = 1, 5 do
+			spawn_garden_catch_item(self, active)
+			active.falling[i].y = 560 - (i * 78)
+		end
+		add_button(self, "quit_game", "Exit Game", 640, 42, 220, 42, COLORS.leaf_dark, function()
+			self.active_game = nil
+			show_games(self)
+		end)
+		return
+	end
+	if active.mode == "action" then
+		if active.score >= active.target_score or active.lives <= 0 or active.time_left <= 0 then
+			show_game_complete(self)
+			return
+		end
+		local round = active.rounds[active.round]
+		if not round then
+			active.round = 1
+			round = active.rounds[active.round]
+		end
+
+		clear_screen(self)
+		self.screen = "game_round"
+		local game = active.session.game
+		add_screen_background(self)
+		add_text(self, "game_title", game.name, 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+		self.action_hud_node = add_text(self, "action_hud", "Score " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 760, 36, COLORS.leaf, 0.95)
+		add_glass_card(self, "action_arena", 640, 388, 920, 340, COLORS.glass)
+		add_text(self, "action_prompt", round.prompt, 640, 505, 760, 70, COLORS.text, 1.02)
+		add_text(self, "action_feedback", active.feedback ~= "" and active.feedback or "Tap the right food pod before Bito's timer runs down.", 640, 450, 760, 34, COLORS.coral, 0.78)
+
+		for i, choice in ipairs(round.choices) do
+			local positions = {
+				{ x = 365, y = 350 },
+				{ x = 565, y = 285 },
+				{ x = 765, y = 350 },
+				{ x = 965, y = 285 },
+			}
+			local pos = positions[i] or { x = 360 + i * 150, y = 310 }
+			local jitter = self.low_stim and 0 or math.random(-18, 18)
+			local x = pos.x + jitter
+			local y = pos.y + (self.low_stim and 0 or math.random(-10, 10))
+			local pod = add_box(self, "food_pod_" .. i, x, y, 150, 116, button_color(i))
+			animate_pulse(self, pod, 1.035, 1.0 + (i * 0.1), i * 0.05)
+			add_floating_image(self, "food_pod_icon_" .. i, tile_icon(choice), x, y + 18, 58, 58, 7, 1.2, i * 0.05)
+			add_text(self, "food_pod_label_" .. i, choice, x, y - 39, 132, 28, COLORS.white, 0.5)
+			self.buttons[#self.buttons + 1] = {
+				id = "food_pod_" .. i,
+				node = pod,
+				action = function()
+					if choice == round.answer then
+						active.score = active.score + 1
+						active.feedback = "Power-up collected!"
+					else
+						active.lives = active.lives - 1
+						active.feedback = "Oops, that pod was a decoy."
+					end
+					active.round = active.round + 1
+					if active.round > #active.rounds then
+						active.round = 1
+					end
+					show_game_round(self)
+				end,
+			}
+		end
+
+		add_button(self, "quit_game", "Exit Game", 640, 95, 220, 48, COLORS.leaf_dark, function()
+			self.active_game = nil
+			show_games(self)
+		end)
+		return
+	end
+	local round = active.rounds[active.round]
+	if not round then
+		show_game_complete(self)
+		return
+	end
+
+	clear_screen(self)
+	self.screen = "game_round"
+	local game = active.session.game
+	add_screen_background(self)
+	add_text(self, "game_title", game.name, 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+	add_text(self, "score", "Round " .. active.round .. " of " .. #active.rounds .. "    Score: " .. active.score, 640, 600, 620, 36, COLORS.leaf, 1)
+	add_glass_card(self, "question_panel", 640, 415, 860, 280, COLORS.glass)
+	add_text(self, "question", round.prompt, 640, 485, 760, 86, COLORS.text, 1.2)
+	if active.feedback ~= "" then
+		add_text(self, "feedback", active.feedback, 640, 360, 620, 36, COLORS.coral, 1)
+	end
+
+	for i, choice in ipairs(round.choices) do
+		local count = #round.choices
+		local x = 340 + (i - 1) * 300
+		local y = 265
+		local w = 250
+		if count > 3 then
+			local col = (i - 1) % 2
+			local row = math.floor((i - 1) / 2)
+			x = 470 + col * 340
+			y = 292 - row * 70
+			w = 300
+		end
+		add_button(self, "choice_" .. i, choice, x, y, w, 58, button_color(i), function()
+			if choice == round.answer then
+				active.score = active.score + 1
+				active.feedback = "Nice choice!"
+			else
+				active.feedback = "Good try. The food answer was " .. round.answer .. "."
+			end
+			active.round = active.round + 1
+			show_game_round(self)
+		end)
+	end
+	add_button(self, "quit_game", "Quit", 640, 95, 220, 48, COLORS.leaf_dark, function()
+		self.active_game = nil
+		show_games(self)
+	end)
+end
+
+function show_game_complete(self)
+	local active = self.active_game
+	if not active then
+		show_games(self)
+		return
+	end
+	local earned = games.complete_session(active.session, active.score)
+	msg.post("#bito_controller", "game_played", {
+		game_id = active.session.game.id,
+		score = active.score,
+	})
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "game_complete"
+	add_screen_background(self)
+	add_glass_card(self, "complete_panel", 640, 380, 820, 360, COLORS.glass)
+	local title = (active.mode == "action" or active.mode == "garden_catch") and (active.score >= active.target_score and "Mission Cleared!" or "Round Finished") or (self.low_stim and "Nice Work" or "Game Complete!")
+	local score_line = (active.mode == "action" or active.mode == "garden_catch") and ("Score: " .. active.score .. " / " .. active.target_score .. "\nLives left: " .. active.lives) or ("Score: " .. active.score .. " / " .. #active.rounds)
+	add_text(self, "complete_title", title, 640, 500, 680, 58, COLORS.leaf_dark, 1.7)
+	add_text(self, "complete_text", active.session.game.name .. "\n" .. score_line .. "\nYou earned +" .. earned .. " points.", 640, 390, 640, 110, COLORS.text, 1.1)
+	self.wallet_node = add_text(self, "view_wallet", "", 640, 290, 520, 34, COLORS.leaf_dark, 1)
+	update_wallet(self)
+	self.active_game = nil
+	add_button(self, "more_games", "More Games", 500, 190, 220, 52, COLORS.blue, function() show_games(self) end)
+	add_button(self, "shop", "Points Arcade", 780, 190, 220, 52, COLORS.gold, function() show_shop(self) end)
+end
+
+function show_shop(self)
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "shop"
+	add_screen_background(self)
+	add_text(self, "view_title", "Bito Upgrade Cabinet", 640, 662, 760, 58, COLORS.leaf_dark, 1.65)
+	add_floating_image(self, "rewards_icon", "icon_upgrade_wrench", 350, 662, 82, 82, 8, 1.5, 0)
+	add_floating_image(self, "star_icon", "icon_points_star", 930, 662, 58, 58, 8, 1.4, 0.2)
+	self.wallet_node = add_text(self, "view_wallet", "", 640, 612, 520, 34, COLORS.leaf_dark, 1)
+	update_wallet(self)
+	add_glass_card(self, "upgrade_marquee", 640, 566, 900, 52, COLORS.glass)
+	add_text(self, "shop_text", self.shop_feedback or "Spend Food Arcade points on Bito cores, armor, trails, titles, facts, gardens, and celebrations.", 640, 566, 810, 34, self.shop_feedback and COLORS.coral or COLORS.text, 0.76)
+	self.shop_feedback = nil
+
+	add_glass_card(self, "upgrade_floor", 640, 320, 1140, 356, vmath.vector4(0.74, 0.96, 0.88, 0.72))
+	local items = shop.all()
+	local shown = math.min(#items, 15)
+	for i = 1, shown do
+		local item = items[i]
+		local col = (i - 1) % 5
+		local row = math.floor((i - 1) / 5)
+		local x = 190 + col * 225
+		local y = 438 - row * 122
+		add_upgrade_cabinet(self, item, i, x, y)
+	end
+
+	add_glass_card(self, "upgrade_tip", 640, 86, 760, 48, COLORS.glass)
+	add_text(self, "upgrade_tip_text", "Owned cabinets can be tapped again to equip Bito's look.", 640, 86, 680, 28, COLORS.text, 0.68)
+	add_button(self, "home", "Bito Home", 360, 34, 200, 42, COLORS.leaf, function() show_home(self) end)
+	add_button(self, "customize", "Customize", 546, 34, 180, 42, COLORS.mint, function() show_customize(self) end)
+	add_button(self, "games", "Food Arcade", 732, 34, 180, 42, COLORS.blue, function() show_games(self) end)
+	add_button(self, "parent", "Parent Panel", 920, 34, 180, 42, COLORS.purple, function() show_parent(self) end)
+end
+
+function show_customize(self)
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "customize"
+	add_screen_background(self)
+	add_text(self, "view_title", "Bito Customizer", 640, 662, 760, 58, COLORS.leaf_dark, 1.65)
+	add_floating_image(self, "customize_icon", "icon_upgrade_wrench", 350, 662, 82, 82, 8, 1.5, 0)
+	self.wallet_node = add_text(self, "view_wallet", "", 640, 612, 520, 34, COLORS.leaf_dark, 1)
+	update_wallet(self)
+
+	add_glass_card(self, "custom_preview", 330, 355, 430, 430, COLORS.glass)
+	add_floating_image(self, "custom_bito", "bito_robot", 330, 380, 250, 375, 14, 2.0, 0)
+	add_text(self, "equipped_title", "Equipped Build", 330, 190, 330, 28, COLORS.leaf_dark, 0.86)
+	add_text(self, "equipped_list", equipped_items_text(), 330, 122, 330, 100, COLORS.text, 0.62)
+
+	add_glass_card(self, "custom_items", 820, 356, 660, 430, COLORS.glass)
+	add_text(self, "custom_items_title", "Owned Upgrades", 820, 532, 540, 34, COLORS.leaf_dark, 1.0)
+	local owned = {}
+	for _, item in ipairs(shop.all()) do
+		if shop.owned(item.id) and is_bito_custom_item(item) then
+			owned[#owned + 1] = item
+		end
+	end
+	if #owned == 0 then
+		add_text(self, "no_owned_items", "No Bito customizations yet.\nPlay games for points, then buy upgrades from the cabinet.", 820, 376, 520, 100, COLORS.text, 0.82)
+	else
+		for i, item in ipairs(owned) do
+			local col = (i - 1) % 2
+			local row = math.floor((i - 1) / 2)
+			local x = 700 + col * 250
+			local y = 462 - row * 100
+			add_custom_item_card(self, item, i, x, y)
+		end
+	end
+
+	add_glass_card(self, "custom_tip", 640, 86, 760, 48, COLORS.glass)
+	add_text(self, "custom_tip_text", "Buy upgrades in the cabinet, then equip them here to change Bito's build.", 640, 86, 680, 28, COLORS.text, 0.68)
+	add_button(self, "home", "Bito Home", 360, 34, 180, 42, COLORS.leaf, function() show_home(self) end)
+	add_button(self, "shop", "Upgrade Shop", 640, 34, 180, 42, COLORS.gold, function() show_shop(self) end)
+	add_button(self, "games", "Food Arcade", 920, 34, 180, 42, COLORS.blue, function() show_games(self) end)
+end
+
+function show_parent(self)
+	sync_sensory_mode(self)
+	clear_screen(self)
+	self.screen = "parent"
+	add_screen_background(self)
+	add_text(self, "view_title", "Parent Info", 640, 650, 700, 58, COLORS.leaf_dark, 1.75)
+	add_floating_image(self, "parent_icon", "icon_parent", 425, 650, 82, 82, 8, 1.6, 0)
+	add_glass_card(self, "parent_panel", 640, 380, 840, 390, COLORS.glass)
+	add_text(self, "parent_text", parent_insight_text() .. "\n\nSensory mode: " .. (self.low_stim and "Low-Stim" or "Bright"), 640, 412, 760, 300, COLORS.text, 0.92)
+	add_button(self, "toggle_sensory", self.low_stim and "Use Bright Mode" or "Use Low-Stim Mode", 500, 158, 270, 50, COLORS.purple, function()
+		set_sensory_mode(self, not self.low_stim)
+		show_parent(self)
+	end)
+	add_button(self, "home", "Home", 780, 158, 220, 50, COLORS.leaf, function() show_home(self) end)
+end
+
+local function refresh_current_screen(self)
+	sync_wallet(self)
+	if self.screen == "home" then
+		if self.meal_status_node then gui.set_text(self.meal_status_node, self.meal_status) end
+		if self.progress_node then gui.set_text(self.progress_node, self.progress_text) end
+		if self.step_node then gui.set_text(self.step_node, steps_text(self.steps)) end
+		if self.bito_speech_node then gui.set_text(self.bito_speech_node, self.bito_speech or "") end
+		if self.bito_status_node then gui.set_text(self.bito_status_node, self.bito_status_text or "") end
+		if self.energy_fill_node then
+			local energy = self.bito_energy or 50
+			local fill_width = math.max(10, 280 * energy / 100)
+			gui.set_position(self.energy_fill_node, vmath.vector3(250 - 140 + (fill_width / 2), 322, 0))
+			gui.set_size(self.energy_fill_node, vmath.vector3(fill_width, 24, 0))
+		end
+		if self.energy_label_node then gui.set_text(self.energy_label_node, "Energy " .. (self.bito_energy or 50) .. "%") end
+	end
+	update_wallet(self)
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.nodes = {}
+	self.buttons = {}
+	self.points = 0
+	self.tokens = 0
+	self.meal_status = "No active meal yet."
+	self.progress = 0
+	self.progress_text = progress_path(0)
+	self.steps = {}
+	self.last_food = nil
+	self.bito_speech = "Bito is checking today's mission."
+	self.bito_status_text = "Bito: Scout L1"
+	self.bito_energy = 50
+	self.shop_feedback = nil
+
+	local old_nodes = { "background", "title", "subtitle", "meal_status", "progress", "wallet", "arcade_title", "games" }
+	for _, id in ipairs(old_nodes) do
+		local node = safe_get_node(id)
+		if node then gui.set_enabled(node, false) end
+	end
+
+	show_intro(self)
+end
+
+function on_message(self, message_id, message, sender)
+	if message.points then self.points = message.points end
+	if message.tokens then self.tokens = message.tokens end
+
+	if message_id == hash("app_ready") then
+		local was_low_stim = self.low_stim
+		sync_sensory_mode(self)
+		if was_low_stim ~= self.low_stim then
+			show_intro(self)
+		else
+			refresh_current_screen(self)
+		end
+	elseif message_id == hash("meal_started") then
+		self.last_food = message.food
+		self.steps = message.steps or self.steps or {}
+		self.meal_status = "Current food challenge: " .. message.food
+		self.progress = 0
+		self.progress_text = progress_path(0)
+		refresh_current_screen(self)
+	elseif message_id == hash("meal_progress") then
+		self.last_food = message.food
+		self.steps = message.steps or self.steps or {}
+		self.progress = message.progress or self.progress or 0
+		self.meal_status = "Buddy is eating with you. Plate: " .. message.grams .. "g"
+		self.progress_text = progress_path(self.progress)
+		refresh_current_screen(self)
+	elseif message_id == hash("meal_complete") then
+		self.last_food = message.food
+		self.steps = message.steps or self.steps or {}
+		self.meal_status = "Meal complete! You earned 3 game tokens."
+		self.progress = 100
+		self.progress_text = progress_path(100)
+		refresh_current_screen(self)
+	elseif message_id == hash("plate_status") then
+		if message.status == "calibrating" then
+			self.meal_status = "Magic calibration: plate is getting ready."
+		elseif message.status == "connected" then
+			self.meal_status = "Plate is awake and ready."
+		elseif message.status == "disconnected" then
+			self.meal_status = "Plate is taking a nap. We can try again soon."
+		end
+		refresh_current_screen(self)
+	elseif message_id == hash("bito_status") then
+		self.bito_speech = message.speech
+		self.bito_energy = message.energy_level or self.bito_energy or 50
+		self.bito_status_text = "Bito: " .. (message.current_form or "Scout") .. " L" .. (message.level or 1) .. " Energy " .. (message.energy_level or 0) .. "%"
+		refresh_current_screen(self)
+	end
+end
+
+function update(self, dt)
+	if self.screen == "game_round" and self.active_game and self.active_game.mode == "garden_catch" then
+		local active = self.active_game
+		active.time_left = math.max(0, (active.time_left or 0) - dt)
+		active.spawn_timer = (active.spawn_timer or 0) - dt
+		if active.spawn_timer <= 0 then
+			spawn_garden_catch_item(self, active)
+			active.spawn_timer = self.low_stim and 0.95 or 0.55
+		end
+		active.basket_x = math.max(150, math.min(1130, self.cursor_x or active.basket_x or 640))
+		if self.basket_node then gui.set_position(self.basket_node, vmath.vector3(active.basket_x, 105, 0)) end
+		if self.basket_label_node then gui.set_position(self.basket_label_node, vmath.vector3(active.basket_x, 103, 0)) end
+		if self.action_hud_node then
+			gui.set_text(self.action_hud_node, "Healthy caught " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left))
+		end
+
+		for i = #active.falling, 1, -1 do
+			local item = active.falling[i]
+			item.y = item.y - (item.speed * dt)
+			gui.set_position(item.node, vmath.vector3(item.x, item.y, 0))
+			gui.set_position(item.icon, vmath.vector3(item.x, item.y + 9, 0))
+			gui.set_position(item.label, vmath.vector3(item.x, item.y - 30, 0))
+			local caught_by_basket = item.y <= 142 and item.y >= 78 and math.abs(item.x - active.basket_x) < 100
+			if caught_by_basket then
+				if item.healthy then
+					active.score = active.score + 1
+				else
+					active.lives = active.lives - 1
+				end
+				gui.delete_node(item.node)
+				gui.delete_node(item.icon)
+				gui.delete_node(item.label)
+				table.remove(active.falling, i)
+			elseif item.y < 42 then
+				if item.healthy then
+					active.lives = active.lives - 1
+				end
+				gui.delete_node(item.node)
+				gui.delete_node(item.icon)
+				gui.delete_node(item.label)
+				table.remove(active.falling, i)
+			end
+		end
+
+		if active.score >= active.target_score or active.lives <= 0 or active.time_left <= 0 then
+			show_game_complete(self)
+		end
+		return
+	end
+	if self.screen == "game_round" and self.active_game and self.active_game.mode == "action" then
+		local active = self.active_game
+		active.time_left = math.max(0, (active.time_left or 0) - dt)
+		if self.action_hud_node then
+			gui.set_text(self.action_hud_node, "Score " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left))
+		end
+		if active.time_left <= 0 then
+			show_game_complete(self)
+		end
+	end
+end
+
+function on_input(self, action_id, action)
+	if (action_id == hash("click") or action_id == hash("touch_multi")) then
+		if action.x then
+			self.cursor_x = action.x
+		end
+		if action.touch and action.touch[1] then
+			self.cursor_x = action.touch[1].x
+		end
+	end
+	if (action_id == hash("click") or action_id == hash("touch_multi")) and action.pressed then
+		local x = action.x
+		local y = action.y
+		if action.touch and action.touch[1] then
+			x = action.touch[1].x
+			y = action.touch[1].y
+		end
+		if not x or not y then
+			return false
+		end
+		for _, button in ipairs(self.buttons) do
+			if gui.pick_node(button.node, x, y) then
+				button.action()
+				return true
+			end
+		end
+	end
+end

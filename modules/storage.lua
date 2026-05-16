@@ -5,11 +5,13 @@ local _state
 
 local function defaults()
 	return {
-		child = { name = "Player", sensitivities = { texture = false, smell = false, color = false } },
+		child = { name = "Player", sensory_mode = "bright", sensitivities = { texture = false, smell = false, color = false } },
 		glossary = {},
 		rewards = { points = 0, tokens = 0, streak = 0, badges = {} },
 		inventory = { items = {}, equipped = { buddy = nil, plate = nil, celebration = nil, title = nil } },
 		metrics = { meals_completed = 0, new_foods = 0 },
+		bito = { level = 1, exp = 0, energy_level = 50, current_form = "Scout" },
+		tasks = { missions = nil },
 	}
 end
 
@@ -17,6 +19,7 @@ function M.init()
 	local d = defaults()
 	_state = sys.load(KEY) or d
 	_state.child = _state.child or d.child
+	_state.child.sensory_mode = _state.child.sensory_mode or d.child.sensory_mode
 	_state.child.sensitivities = _state.child.sensitivities or d.child.sensitivities
 	_state.glossary = _state.glossary or {}
 	_state.rewards = _state.rewards or d.rewards
@@ -28,9 +31,13 @@ function M.init()
 	_state.inventory.items = _state.inventory.items or {}
 	_state.inventory.equipped = _state.inventory.equipped or d.inventory.equipped
 	_state.metrics = _state.metrics or d.metrics
+	_state.bito = _state.bito or d.bito
+	_state.bito.level = _state.bito.level or d.bito.level
+	_state.bito.exp = _state.bito.exp or d.bito.exp
+	_state.bito.energy_level = _state.bito.energy_level or d.bito.energy_level
+	_state.bito.current_form = _state.bito.current_form or d.bito.current_form
+	_state.tasks = _state.tasks or d.tasks
 	sys.save(KEY, _state)
-	local glossary = require("modules.glossary")
-	glossary.ensure_defaults()
 end
 
 function M.get_state()

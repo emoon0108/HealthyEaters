@@ -1,0 +1,301 @@
+script: "/main/ui/main.gui_script"
+fonts {
+  name: "text"
+  font: "/builtins/fonts/default.font"
+}
+textures {
+  name: "buddy_food"
+  texture: "/assets/images/buddy_food.png"
+}
+textures {
+  name: "decor_leaf"
+  texture: "/assets/images/decor_leaf.png"
+}
+textures {
+  name: "decor_star"
+  texture: "/assets/images/decor_star.png"
+}
+textures {
+  name: "food_apple"
+  texture: "/assets/images/food_apple.png"
+}
+textures {
+  name: "food_broccoli"
+  texture: "/assets/images/food_broccoli.png"
+}
+textures {
+  name: "food_carrot"
+  texture: "/assets/images/food_carrot.png"
+}
+textures {
+  name: "food_yogurt"
+  texture: "/assets/images/food_yogurt.png"
+}
+textures {
+  name: "food_banana"
+  texture: "/assets/images/food_banana.png"
+}
+textures {
+  name: "food_strawberry"
+  texture: "/assets/images/food_strawberry.png"
+}
+textures {
+  name: "food_milk"
+  texture: "/assets/images/food_milk.png"
+}
+textures {
+  name: "food_rice"
+  texture: "/assets/images/food_rice.png"
+}
+textures {
+  name: "food_chicken"
+  texture: "/assets/images/food_chicken.png"
+}
+textures {
+  name: "food_beans"
+  texture: "/assets/images/food_beans.png"
+}
+textures {
+  name: "icon_games"
+  texture: "/assets/images/icon_games.png"
+}
+textures {
+  name: "icon_parent"
+  texture: "/assets/images/icon_parent.png"
+}
+textures {
+  name: "icon_rewards"
+  texture: "/assets/images/icon_rewards.png"
+}
+textures {
+  name: "icon_token"
+  texture: "/assets/images/icon_token.png"
+}
+textures {
+  name: "icon_glossary"
+  texture: "/assets/images/icon_glossary.png"
+}
+textures {
+  name: "icon_heart_food"
+  texture: "/assets/images/icon_heart_food.png"
+}
+textures {
+  name: "decor_confetti"
+  texture: "/assets/images/decor_confetti.png"
+}
+textures {
+  name: "plate_balanced"
+  texture: "/assets/images/plate_balanced.png"
+}
+textures {
+  name: "bito_robot"
+  texture: "/assets/images/generated/bito_robot.png"
+}
+textures {
+  name: "bito_lab_background"
+  texture: "/assets/images/generated/bito_lab_background.png"
+}
+textures {
+  name: "icon_step_look"
+  texture: "/assets/images/generated/icon_step_look.png"
+}
+textures {
+  name: "icon_step_touch"
+  texture: "/assets/images/generated/icon_step_touch.png"
+}
+textures {
+  name: "icon_step_taste"
+  texture: "/assets/images/generated/icon_step_taste.png"
+}
+textures {
+  name: "icon_points_star"
+  texture: "/assets/images/generated/icon_points_star.png"
+}
+textures {
+  name: "icon_arcade_token"
+  texture: "/assets/images/generated/icon_arcade_token.png"
+}
+textures {
+  name: "icon_upgrade_wrench"
+  texture: "/assets/images/generated/icon_upgrade_wrench.png"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 360.0
+  }
+  size {
+    x: 1280.0
+    y: 720.0
+  }
+  color {
+    x: 0.08
+    y: 0.18
+    z: 0.13
+  }
+  type: TYPE_BOX
+  id: "background"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 640.0
+    y: 660.0
+  }
+  scale {
+    x: 2.0
+    y: 2.0
+  }
+  size {
+    x: 400.0
+    y: 50.0
+  }
+  color {
+    x: 0.91
+    z: 0.76
+  }
+  type: TYPE_TEXT
+  text: "Healthy Eaters"
+  font: "text"
+  id: "title"
+  inherit_alpha: true
+  shadow_alpha: 0.4
+}
+nodes {
+  position {
+    x: 640.0
+    y: 615.0
+  }
+  size {
+    x: 760.0
+    y: 34.0
+  }
+  color {
+    x: 0.84
+    y: 0.96
+    z: 0.9
+  }
+  type: TYPE_TEXT
+  font: "text"
+  id: "subtitle"
+  inherit_alpha: true
+  shadow_alpha: 0.3
+}
+nodes {
+  position {
+    x: 640.0
+    y: 545.0
+  }
+  scale {
+    x: 1.25
+    y: 1.25
+  }
+  size {
+    x: 760.0
+    y: 42.0
+  }
+  color {
+    y: 0.95
+    z: 0.67
+  }
+  type: TYPE_TEXT
+  font: "text"
+  id: "meal_status"
+  inherit_alpha: true
+  shadow_alpha: 0.4
+}
+nodes {
+  position {
+    x: 640.0
+    y: 500.0
+  }
+  scale {
+    x: 1.15
+    y: 1.15
+  }
+  size {
+    x: 500.0
+    y: 36.0
+  }
+  color {
+    x: 0.93
+    z: 0.87
+  }
+  type: TYPE_TEXT
+  font: "text"
+  id: "progress"
+  inherit_alpha: true
+  shadow_alpha: 0.4
+}
+nodes {
+  position {
+    x: 640.0
+    y: 455.0
+  }
+  scale {
+    x: 1.1
+    y: 1.1
+  }
+  size {
+    x: 560.0
+    y: 34.0
+  }
+  color {
+    x: 0.79
+    y: 0.95
+  }
+  type: TYPE_TEXT
+  font: "text"
+  id: "wallet"
+  inherit_alpha: true
+  shadow_alpha: 0.4
+}
+nodes {
+  position {
+    x: 640.0
+    y: 390.0
+  }
+  scale {
+    x: 1.2
+    y: 1.2
+  }
+  size {
+    x: 520.0
+    y: 34.0
+  }
+  color {
+    y: 0.95
+    z: 0.67
+  }
+  type: TYPE_TEXT
+  text: "Food Game Arcade"
+  font: "text"
+  id: "arcade_title"
+  inherit_alpha: true
+  shadow_alpha: 0.4
+}
+nodes {
+  position {
+    x: 640.0
+    y: 220.0
+  }
+  scale {
+    x: 0.95
+    y: 0.95
+  }
+  size {
+    x: 760.0
+    y: 290.0
+  }
+  color {
+    x: 0.92
+    z: 0.91
+  }
+  type: TYPE_TEXT
+  font: "text"
+  id: "games"
+  line_break: true
+  inherit_alpha: true
+  shadow_alpha: 0.4
+}
+material: "/builtins/materials/gui.material"

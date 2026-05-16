@@ -14,16 +14,16 @@ Children earn game tokens by completing food goals. They spend tokens to play mi
 
 | Game | Points |
 | --- | ---: |
-| Food Match | 10 |
-| Garden Catch | 10 |
-| Plate Builder | 20 |
-| Texture Sort | 10 |
-| Color Plate | 10 |
-| Memory Meal | 15 |
-| Food Maze | 20 |
-| Snack Tap | 10 |
-| Recipe Order | 20 |
-| Nutrient Quest | 30 |
+| Food Match | 15 |
+| Garden Catch | 15 |
+| Plate Builder | 30 |
+| Texture Sort | 15 |
+| Color Plate | 15 |
+| Memory Meal | 20 |
+| Food Maze | 30 |
+| Snack Tap | 15 |
+| Recipe Order | 30 |
+| Nutrient Quest | 40 |
 
 ## Shop Categories
 

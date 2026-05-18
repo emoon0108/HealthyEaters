@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Healthy Eaters</title>
+    <meta
+      name="description"
+      content="Autism-aware nutrition exposure prototype with a simulated smart plate, calm food challenges, rewards, mini-games, and parent progress concepts."
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17211c;
+        --muted: #5d6b61;
+        --paper: #fbfaf4;
+        --leaf: #2f8f61;
+        --lime: #b7df72;
+        --sun: #f8c14a;
+        --berry: #d95f73;
+        --aqua: #68bdb8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      main {
+        overflow: hidden;
+      }
+
+      .hero {
+        min-height: 88vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+        gap: 48px;
+        align-items: center;
+        padding: 64px clamp(22px, 6vw, 88px) 32px;
+        background:
+          radial-gradient(circle at 12% 18%, rgba(248, 193, 74, 0.35), transparent 28%),
+          linear-gradient(135deg, #fffdf3 0%, #eaf6dd 52%, #dcf4f1 100%);
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 760px;
+        font-size: clamp(52px, 9vw, 126px);
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 680px;
+        margin: 28px 0 0;
+        color: var(--muted);
+        font-size: clamp(18px, 2.2vw, 24px);
+        line-height: 1.55;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 34px;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .button {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 0 18px;
+        color: var(--ink);
+        font-weight: 800;
+        text-decoration: none;
+        background: #ffffff;
+        box-shadow: 0 5px 0 var(--ink);
+      }
+
+      .button.primary {
+        background: var(--sun);
+      }
+
+      .showcase {
+        position: relative;
+        min-height: 520px;
+        display: grid;
+        place-items: center;
+      }
+
+      .screen {
+        width: min(100%, 430px);
+        border: 4px solid var(--ink);
+        border-radius: 28px;
+        background: #fffef8;
+        box-shadow: 18px 18px 0 rgba(23, 33, 28, 0.16);
+        overflow: hidden;
+      }
+
+      .screen-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        background: var(--leaf);
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        background: #fff;
+      }
+
+      .screen-body {
+        padding: 26px;
+      }
+
+      .plate {
+        width: 210px;
+        height: 210px;
+        margin: 0 auto 24px;
+        display: grid;
+        place-items: center;
+        border: 6px solid #d7efe2;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: inset 0 0 0 18px #f3fbf6;
+      }
+
+      .plate img {
+        width: 132px;
+        height: 132px;
+        object-fit: contain;
+      }
+
+      .progress {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .step {
+        min-height: 78px;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        padding: 10px;
+        background: #f8fbf6;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .step strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 24px;
+      }
+
+      section {
+        padding: 70px clamp(22px, 6vw, 88px);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        border: 2px solid rgba(23, 33, 28, 0.18);
+        border-radius: 8px;
+        padding: 22px;
+        background: #ffffff;
+      }
+
+      .card h2,
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 22px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .band {
+        background: #17211c;
+        color: #ffffff;
+      }
+
+      .band .grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .metric {
+        font-size: 44px;
+        font-weight: 900;
+      }
+
+      @media (max-width: 920px) {
+        .hero {
+          min-height: auto;
+          grid-template-columns: 1fr;
+          padding-top: 48px;
+        }
+
+        .showcase {
+          min-height: 420px;
+        }
+
+        .grid,
+        .band .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Healthy Eaters</h1>
+          <p class="lead">
+            A sensory-aware nutrition prototype that turns food exposure into calm practice,
+            smart-plate progress, mini-games, and parent-friendly insight.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/emoon0108/HealthyEaters">View Code</a>
+            <a class="button" href="https://github.com/emoon0108/HealthyEaters/blob/main/PROJECT_SUMMARY.md">Project Summary</a>
+          </div>
+        </div>
+        <div class="showcase" aria-label="Healthy Eaters app preview">
+          <div class="screen">
+            <div class="screen-top">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <div class="screen-body">
+              <div class="plate">
+                <img src="https://raw.githubusercontent.com/emoon0108/HealthyEaters/main/assets/images/plate_balanced.png" alt="Balanced plate illustration" />
+              </div>
+              <div class="progress">
+                <div class="step"><strong>1</strong>Look</div>
+                <div class="step"><strong>2</strong>Touch</div>
+                <div class="step"><strong>3</strong>Taste</div>
+                <div class="step"><strong>4</strong>Complete</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="grid">
+          <article class="card">
+            <h2>Smart Plate Ready</h2>
+            <p>BLE-style callbacks simulate connection, calibration, weight changes, and friendly disconnect states.</p>
+          </article>
+          <article class="card">
+            <h2>Low-Stim UX</h2>
+            <p>Softer colors, calmer language, and slower transitions support sensory-sensitive users.</p>
+          </article>
+          <article class="card">
+            <h2>Reward Loops</h2>
+            <p>Points, tokens, badges, streaks, and unlocks celebrate effort without pressuring completion.</p>
+          </article>
+          <article class="card">
+            <h2>Parent Insight</h2>
+            <p>Food exposure data supports early Food IEP-style summaries and progress patterns.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="band">
+        <div class="grid">
+          <div>
+            <div class="metric">10</div>
+            <p>food-themed mini-games modeled in the token arcade</p>
+          </div>
+          <div>
+            <div class="metric">4</div>
+            <p>gradual meal steps rewarded before completion</p>
+          </div>
+          <div>
+            <div class="metric">Lua</div>
+            <p>Defold prototype with local persistence and modular systems</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -2,6 +2,7 @@ local games = require("modules.games")
 local rewards = require("modules.rewards")
 local shop = require("modules.shop")
 local storage = require("modules.storage")
+local ops = require("modules.ops")
 
 local NORMAL_COLORS = {
 	bg = vmath.vector4(0.97, 1.0, 0.84, 1),
@@ -194,6 +195,7 @@ local show_games
 local show_shop
 local show_customize
 local show_parent
+local show_ops_dashboard
 local show_game_start
 local show_game_round
 local show_game_complete
@@ -388,6 +390,110 @@ local DESSERT_DECOYS = {
 	{ name = "Soda", icon = "icon_arcade_token" },
 }
 
+local GAMEPLAY_MODES = {
+	garden_catch = "garden_catch",
+	memory_meal = "memory_cards",
+	food_maze = "maze_run",
+	recipe_order = "recipe_stack",
+	snack_tap = "snack_pop",
+}
+
+local ACTION_SCENES = {
+	food_match = {
+		arena = "Sorting Dock",
+		instruction = "Send the food crate into the matching group gate.",
+		accent = "food_apple",
+		layout = "bins",
+	},
+	plate_builder = {
+		arena = "Plate Workshop",
+		instruction = "Add the missing piece to Bito's power plate.",
+		accent = "plate_balanced",
+		layout = "plate",
+	},
+	texture_sort = {
+		arena = "Texture Lab",
+		instruction = "Test the food sample and drop it into the right texture tray.",
+		accent = "food_carrot",
+		layout = "lab",
+	},
+	color_plate = {
+		arena = "Rainbow Plate",
+		instruction = "Paint the plate with the color Bito needs next.",
+		accent = "decor_star",
+		layout = "rainbow",
+	},
+	nutrient_quest = {
+		arena = "Power Quest",
+		instruction = "Choose the food gem that unlocks the body power.",
+		accent = "icon_points_star",
+		layout = "quest",
+	},
+}
+
+local MAZE_LAYOUT = {
+	{ 0, 0, 1, 0, 0, 0, 0 },
+	{ 1, 0, 1, 0, 1, 1, 0 },
+	{ 0, 0, 0, 0, 0, 1, 0 },
+	{ 0, 1, 1, 1, 0, 0, 0 },
+	{ 0, 0, 0, 1, 0, 1, 0 },
+}
+
+local MAZE_ITEMS = {
+	{ name = "Apple", col = 2, row = 1 },
+	{ name = "Rice", col = 4, row = 1 },
+	{ name = "Carrot", col = 5, row = 3 },
+	{ name = "Chicken", col = 7, row = 4 },
+}
+
+local function shallow_copy(list)
+	local copy = {}
+	for i, value in ipairs(list or {}) do
+		copy[i] = value
+	end
+	return copy
+end
+
+local function shuffled(list)
+	local copy = shallow_copy(list)
+	for i = #copy, 2, -1 do
+		local j = math.random(i)
+		copy[i], copy[j] = copy[j], copy[i]
+	end
+	return copy
+end
+
+local function has_collected(active, name)
+	return active.maze_collected and active.maze_collected[name] == true
+end
+
+local function setup_memory_cards(game)
+	local cards = {}
+	for _, name in ipairs(game.pairs or {}) do
+		cards[#cards + 1] = { name = name, matched = false, revealed = false }
+		cards[#cards + 1] = { name = name, matched = false, revealed = false }
+	end
+	return shuffled(cards)
+end
+
+local function setup_snack_popups(active)
+	local round = active.rounds[active.round] or active.rounds[1]
+	active.snack_popups = {}
+	active.snack_round = (active.snack_round or 0) + 1
+	if round then
+		for _, choice in ipairs(shuffled(round.choices)) do
+			active.snack_popups[#active.snack_popups + 1] = {
+				label = choice,
+				healthy = choice == round.answer,
+			}
+		end
+	end
+	active.round = active.round + 1
+	if active.round > #active.rounds then
+		active.round = 1
+	end
+end
+
 local function spawn_garden_catch_item(self, active)
 	local healthy = math.random() < 0.72
 	local list = healthy and HEALTHY_FALLING_FOODS or DESSERT_DECOYS
@@ -566,6 +672,16 @@ local function parent_insight_text()
 	return "Food IEP snapshot:\n\nStrongest texture pattern: " .. top_texture .. "\nStrongest color pattern: " .. top_color .. "\nMeals completed: " .. (s.metrics.meals_completed or 0) .. "\nFoods introduced: " .. (s.metrics.new_foods or 0)
 end
 
+local function ops_dashboard_text()
+	local summary = ops.summary()
+	return "QR/session code: " .. summary.code ..
+		"\nActive food: " .. summary.active_food ..
+		"\nPipeline: " .. ops.pipeline_text() ..
+		"\nLow-stock alert: " .. summary.stock_alert ..
+		"\n\nMenu and availability:\n" .. summary.menu ..
+		"\n\nLive event log:\n" .. (summary.events ~= "" and summary.events or "No events yet.")
+end
+
 local function bridge_round(food)
 	if not food then
 		return nil
@@ -671,6 +787,34 @@ function show_home(self)
 	add_button(self, "parent", "Parent Panel", 1000, 98, 190, 50, COLORS.purple, function() show_parent(self) end)
 end
 
+function show_ops_dashboard(self)
+	sync_wallet(self)
+	clear_screen(self)
+	self.screen = "ops"
+	add_screen_background(self)
+	add_text(self, "view_title", "Meal Ops Dashboard", 640, 650, 760, 58, COLORS.leaf_dark, 1.65)
+	add_glass_card(self, "ops_panel", 640, 398, 1040, 430, COLORS.glass)
+	add_text(self, "ops_text", ops_dashboard_text(), 640, 415, 940, 360, COLORS.text, 0.66)
+	add_button(self, "new_qr", "New QR Code", 275, 144, 210, 48, COLORS.blue, function()
+		ops.new_session_code()
+		show_ops_dashboard(self)
+	end)
+	add_button(self, "toggle_apple", "Toggle Apple", 500, 144, 210, 48, COLORS.gold, function()
+		ops.toggle_menu_food("Apple")
+		show_ops_dashboard(self)
+	end)
+	add_button(self, "restock", "Restock Low", 725, 144, 210, 48, COLORS.mint, function()
+		ops.restock_low()
+		show_ops_dashboard(self)
+	end)
+	add_button(self, "reviewed", "Mark Reviewed", 950, 144, 210, 48, COLORS.purple, function()
+		ops.set_status("reviewed")
+		show_ops_dashboard(self)
+	end)
+	add_button(self, "home", "Bito Home", 500, 64, 220, 46, COLORS.leaf, function() show_home(self) end)
+	add_button(self, "parent", "Parent Info", 780, 64, 220, 46, COLORS.coral, function() show_parent(self) end)
+end
+
 function show_games(self)
 	sync_wallet(self)
 	clear_screen(self)
@@ -736,15 +880,29 @@ function show_game_start(self, game_id)
 			end
 			rounds = bridged_rounds
 		end
+		local mode = GAMEPLAY_MODES[game_id] or "action"
+		local target_score = 8
+		if mode == "garden_catch" then
+			target_score = 15
+		elseif mode == "memory_cards" then
+			target_score = #(session.game.pairs or {})
+		elseif mode == "maze_run" then
+			target_score = #MAZE_ITEMS
+		elseif mode == "recipe_stack" then
+			local recipes = session.game.recipes or {}
+			target_score = recipes[1] and #(recipes[1].steps or {}) or 4
+		elseif mode == "snack_pop" then
+			target_score = 10
+		end
 		self.active_game = {
 			session = session,
 			rounds = rounds,
 			round = 1,
 			score = 0,
 			lives = 3,
-			target_score = game_id == "garden_catch" and 15 or 8,
+			target_score = target_score,
 			time_left = math.min(90, math.max(45, session.game.duration or 60)),
-			mode = game_id == "garden_catch" and "garden_catch" or "action",
+			mode = mode,
 			basket_x = 640,
 			falling = {},
 			spawn_timer = 0,
@@ -752,6 +910,25 @@ function show_game_start(self, game_id)
 			garden_rendered = false,
 			feedback = "",
 		}
+		if mode == "memory_cards" then
+			self.active_game.memory_cards = setup_memory_cards(session.game)
+			self.active_game.first_card = nil
+			self.active_game.feedback = "Flip two cards. Match the food pictures."
+		elseif mode == "maze_run" then
+			self.active_game.maze_collected = {}
+			self.active_game.maze_player = { col = 1, row = 1 }
+			self.active_game.feedback = "Move through the maze, collect ingredients, then reach the plate."
+		elseif mode == "recipe_stack" then
+			local recipes = session.game.recipes or {}
+			self.active_game.recipe = recipes[math.random(math.max(1, #recipes))] or { name = session.game.name, steps = { "Wash hands", "Add food", "Mix", "Eat" } }
+			self.active_game.recipe_step = 1
+			self.active_game.recipe_options = shuffled(self.active_game.recipe.steps)
+			self.active_game.target_score = #(self.active_game.recipe.steps or {})
+			self.active_game.feedback = "Tap the next recipe step in order."
+		elseif mode == "snack_pop" then
+			setup_snack_popups(self.active_game)
+			self.active_game.feedback = "Tap the healthy snacks when they pop up. Leave the sweets alone."
+		end
 		sync_wallet(self)
 		show_game_transition(self, 1)
 	end)
@@ -775,10 +952,280 @@ function show_game_transition(self, step)
 	end)
 end
 
+local function add_action_scene_dressing(self, game_id)
+	local scene = ACTION_SCENES[game_id] or ACTION_SCENES.food_match
+	add_text(self, "arena_name", scene.arena, 640, 548, 760, 34, COLORS.leaf_dark, 0.9)
+	add_text(self, "arena_instruction", scene.instruction, 640, 508, 760, 34, COLORS.text, 0.74)
+	add_floating_image(self, "arena_accent", scene.accent, 246, 460, 86, 86, 7, 1.5, 0.05)
+	if scene.layout == "bins" then
+		for i = 1, 5 do
+			add_box(self, "sort_gate_" .. i, 260 + (i * 126), 232, 82, 80, button_color(i))
+			add_text(self, "sort_gate_label_" .. i, i == 1 and "FRUIT" or (i == 2 and "VEG" or (i == 3 and "GRAIN" or (i == 4 and "PRO" or "DAIRY"))), 260 + (i * 126), 232, 70, 22, COLORS.white, 0.42)
+		end
+	elseif scene.layout == "plate" then
+		add_image(self, "builder_plate", "plate_balanced", 640, 272, 230, 230)
+		for i = 1, math.min(5, self.active_game.score + 1) do
+			add_box(self, "plate_sector_" .. i, 512 + (i * 42), 274 + ((i % 2) * 38), 42, 42, button_color(i))
+		end
+	elseif scene.layout == "lab" then
+		for i = 1, 4 do
+			add_box(self, "texture_tray_" .. i, 380 + (i * 105), 242, 88, 46, vmath.vector4(1, 1, 1, 0.52))
+			add_box(self, "texture_sample_" .. i, 380 + (i * 105), 278, 52, 18 + (i * 7), button_color(i))
+		end
+	elseif scene.layout == "rainbow" then
+		for i = 1, 6 do
+			add_box(self, "rainbow_bar_" .. i, 352 + (i * 82), 252 + (i % 2) * 18, 70, 124, button_color(i))
+		end
+	elseif scene.layout == "quest" then
+		add_floating_image(self, "quest_bito", "bito_robot", 305, 283, 120, 180, 9, 1.8, 0)
+		for i = 1, 4 do
+			add_box(self, "quest_path_" .. i, 430 + i * 110, 256 + ((i % 2) * 36), 96, 28, COLORS.gold)
+		end
+	end
+end
+
+local function render_memory_cards(self, active)
+	clear_screen(self)
+	self.screen = "game_round"
+	add_screen_background(self)
+	add_text(self, "game_title", "Memory Meal", 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+	self.action_hud_node = add_text(self, "action_hud", "Pairs " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 840, 36, COLORS.leaf, 0.9)
+	add_glass_card(self, "memory_table", 640, 358, 900, 420, COLORS.glass)
+	add_text(self, "memory_feedback", active.feedback, 640, 542, 760, 34, COLORS.text, 0.78)
+	for i, card in ipairs(active.memory_cards or {}) do
+		local col = (i - 1) % 4
+		local row = math.floor((i - 1) / 4)
+		local x = 400 + col * 160
+		local y = 454 - row * 118
+		local face_up = card.revealed or card.matched
+		local color = card.matched and COLORS.mint or (face_up and COLORS.gold or COLORS.purple)
+		local node = add_box(self, "memory_card_" .. i, x, y, 118, 92, color)
+		add_box(self, "memory_card_shine_" .. i, x, y + 24, 92, 16, vmath.vector4(1, 1, 1, 0.22))
+		if face_up then
+			add_image(self, "memory_icon_" .. i, tile_icon(card.name), x, y + 8, 52, 52)
+			add_text(self, "memory_label_" .. i, card.name, x, y - 32, 104, 20, COLORS.white, 0.42)
+		else
+			add_text(self, "memory_back_" .. i, "?", x, y - 4, 80, 56, COLORS.white, 1.6)
+		end
+		if not card.matched and not card.revealed then
+			self.buttons[#self.buttons + 1] = {
+				id = "memory_card_" .. i,
+				node = node,
+				action = function()
+					card.revealed = true
+					if not active.first_card then
+						active.first_card = i
+						active.feedback = "Pick one more card."
+					else
+						local first = active.memory_cards[active.first_card]
+						if first and first.name == card.name and active.first_card ~= i then
+							first.matched = true
+							card.matched = true
+							active.score = active.score + 1
+							active.feedback = "Meal pair matched!"
+						else
+							if first then first.revealed = false end
+							card.revealed = false
+							active.lives = active.lives - 1
+							active.feedback = "Not a pair yet. Try a different memory spot."
+						end
+						active.first_card = nil
+					end
+					show_game_round(self)
+				end,
+			}
+		end
+	end
+	add_button(self, "quit_game", "Exit Game", 640, 70, 220, 44, COLORS.leaf_dark, function()
+		self.active_game = nil
+		show_games(self)
+	end)
+end
+
+local function render_maze_run(self, active)
+	clear_screen(self)
+	self.screen = "game_round"
+	add_screen_background(self)
+	add_text(self, "game_title", "Food Maze", 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+	self.action_hud_node = add_text(self, "action_hud", "Ingredients " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 900, 36, COLORS.leaf, 0.9)
+	add_glass_card(self, "maze_panel", 640, 370, 820, 430, COLORS.glass)
+	add_text(self, "maze_feedback", active.feedback, 640, 552, 760, 34, COLORS.text, 0.72)
+	local start_x, start_y, cell = 410, 485, 70
+	for row = 1, #MAZE_LAYOUT do
+		for col = 1, #MAZE_LAYOUT[row] do
+			local x = start_x + (col - 1) * cell
+			local y = start_y - (row - 1) * cell
+			local wall = MAZE_LAYOUT[row][col] == 1
+			local color = wall and COLORS.leaf_dark or vmath.vector4(1, 1, 1, 0.54)
+			add_box(self, "maze_cell_" .. row .. "_" .. col, x, y, 60, 60, color)
+		end
+	end
+	add_image(self, "maze_goal", "plate_balanced", start_x + 6 * cell, start_y - 4 * cell, 52, 52)
+	for _, item in ipairs(MAZE_ITEMS) do
+		if not has_collected(active, item.name) then
+			add_image(self, "maze_item_" .. item.name, tile_icon(item.name), start_x + (item.col - 1) * cell, start_y - (item.row - 1) * cell, 44, 44)
+		end
+	end
+	add_image(self, "maze_player", "bito_robot", start_x + (active.maze_player.col - 1) * cell, start_y - (active.maze_player.row - 1) * cell + 7, 54, 72)
+	local function move(dc, dr)
+		return function()
+			local next_col = active.maze_player.col + dc
+			local next_row = active.maze_player.row + dr
+			if not MAZE_LAYOUT[next_row] or MAZE_LAYOUT[next_row][next_col] == nil or MAZE_LAYOUT[next_row][next_col] == 1 then
+				active.lives = active.lives - 1
+				active.feedback = "That path is blocked."
+				show_game_round(self)
+				return
+			end
+			active.maze_player.col = next_col
+			active.maze_player.row = next_row
+			for _, item in ipairs(MAZE_ITEMS) do
+				if item.col == next_col and item.row == next_row and not has_collected(active, item.name) then
+					active.maze_collected[item.name] = true
+					active.score = active.score + 1
+					active.feedback = item.name .. " collected!"
+				end
+			end
+			if next_col == 7 and next_row == 5 then
+				active.feedback = active.score >= active.target_score and "Plate reached with every ingredient!" or "Find every ingredient before the plate."
+			end
+			show_game_round(self)
+		end
+	end
+	add_button(self, "maze_up", "^", 1040, 402, 82, 54, COLORS.blue, move(0, -1))
+	add_button(self, "maze_left", "<", 950, 336, 82, 54, COLORS.blue, move(-1, 0))
+	add_button(self, "maze_right", ">", 1130, 336, 82, 54, COLORS.blue, move(1, 0))
+	add_button(self, "maze_down", "v", 1040, 270, 82, 54, COLORS.blue, move(0, 1))
+	add_button(self, "quit_game", "Exit Game", 640, 70, 220, 44, COLORS.leaf_dark, function()
+		self.active_game = nil
+		show_games(self)
+	end)
+end
+
+local function render_recipe_stack(self, active)
+	clear_screen(self)
+	self.screen = "game_round"
+	add_screen_background(self)
+	add_text(self, "game_title", "Recipe Order", 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+	self.action_hud_node = add_text(self, "action_hud", "Steps " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 840, 36, COLORS.leaf, 0.9)
+	add_glass_card(self, "recipe_panel", 640, 372, 900, 420, COLORS.glass)
+	add_text(self, "recipe_name", active.recipe.name, 640, 540, 760, 38, COLORS.leaf_dark, 1)
+	add_text(self, "recipe_feedback", active.feedback, 640, 502, 760, 30, COLORS.text, 0.72)
+	for i, step in ipairs(active.recipe.steps or {}) do
+		local x = 350 + (i - 1) * 190
+		local done = i < active.recipe_step
+		add_box(self, "recipe_done_" .. i, x, 420, 150, 70, done and COLORS.mint or vmath.vector4(1, 1, 1, 0.45))
+		add_text(self, "recipe_done_label_" .. i, done and step or tostring(i), x, 420, 130, 34, done and COLORS.leaf_dark or COLORS.text, 0.52)
+	end
+	for i, step in ipairs(active.recipe_options or {}) do
+		local x = 370 + ((i - 1) % 2) * 540
+		local y = 300 - math.floor((i - 1) / 2) * 74
+		local node = add_box(self, "recipe_step_" .. i, x, y, 420, 56, button_color(i))
+		add_text(self, "recipe_step_label_" .. i, step, x, y - 2, 390, 28, COLORS.white, 0.58)
+		self.buttons[#self.buttons + 1] = {
+			id = "recipe_step_" .. i,
+			node = node,
+			action = function()
+				local correct = active.recipe.steps[active.recipe_step]
+				if step == correct then
+					active.score = active.score + 1
+					active.recipe_step = active.recipe_step + 1
+					active.feedback = "Step locked into the recipe!"
+					for option_index, option in ipairs(active.recipe_options) do
+						if option == step then
+							table.remove(active.recipe_options, option_index)
+							break
+						end
+					end
+				else
+					active.lives = active.lives - 1
+					active.feedback = "That step comes later."
+				end
+				show_game_round(self)
+			end,
+		}
+	end
+	add_button(self, "quit_game", "Exit Game", 640, 70, 220, 44, COLORS.leaf_dark, function()
+		self.active_game = nil
+		show_games(self)
+	end)
+end
+
+local function render_snack_pop(self, active)
+	clear_screen(self)
+	self.screen = "game_round"
+	add_screen_background(self)
+	add_text(self, "game_title", "Snack Tap", 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
+	self.action_hud_node = add_text(self, "action_hud", "Snacks " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 840, 36, COLORS.leaf, 0.9)
+	add_glass_card(self, "snack_counter", 640, 360, 930, 430, COLORS.glass)
+	add_text(self, "snack_feedback", active.feedback, 640, 542, 760, 34, COLORS.text, 0.76)
+	for i, popup in ipairs(active.snack_popups or {}) do
+		local col = (i - 1) % 3
+		local row = math.floor((i - 1) / 3)
+		local x = 400 + col * 240 + (self.low_stim and 0 or math.random(-12, 12))
+		local y = 416 - row * 132 + (self.low_stim and 0 or math.random(-8, 8))
+		local node = add_box(self, "snack_popup_" .. i, x, y, 168, 112, popup.healthy and COLORS.leaf or COLORS.coral)
+		animate_pulse(self, node, popup.healthy and 1.04 or 0.96, 0.9, i * 0.04)
+		add_image(self, "snack_icon_" .. i, tile_icon(popup.label), x, y + 18, 56, 56)
+		add_text(self, "snack_label_" .. i, popup.label, x, y - 38, 148, 28, COLORS.white, 0.5)
+		self.buttons[#self.buttons + 1] = {
+			id = "snack_popup_" .. i,
+			node = node,
+			action = function()
+				if popup.healthy then
+					active.score = active.score + 1
+					active.feedback = "Healthy snack tapped!"
+				else
+					active.lives = active.lives - 1
+					active.feedback = "That was a sweet decoy."
+				end
+				setup_snack_popups(active)
+				show_game_round(self)
+			end,
+		}
+	end
+	add_button(self, "quit_game", "Exit Game", 640, 70, 220, 44, COLORS.leaf_dark, function()
+		self.active_game = nil
+		show_games(self)
+	end)
+end
+
 function show_game_round(self)
 	local active = self.active_game
 	if not active or not active.rounds then
 		show_games(self)
+		return
+	end
+	if active.mode == "memory_cards" then
+		if active.score >= active.target_score or active.lives <= 0 or active.time_left <= 0 then
+			show_game_complete(self)
+			return
+		end
+		render_memory_cards(self, active)
+		return
+	end
+	if active.mode == "maze_run" then
+		if active.lives <= 0 or active.time_left <= 0 or (active.score >= active.target_score and active.maze_player and active.maze_player.col == 7 and active.maze_player.row == 5) then
+			show_game_complete(self)
+			return
+		end
+		render_maze_run(self, active)
+		return
+	end
+	if active.mode == "recipe_stack" then
+		if active.score >= active.target_score or active.lives <= 0 or active.time_left <= 0 then
+			show_game_complete(self)
+			return
+		end
+		render_recipe_stack(self, active)
+		return
+	end
+	if active.mode == "snack_pop" then
+		if active.score >= active.target_score or active.lives <= 0 or active.time_left <= 0 then
+			show_game_complete(self)
+			return
+		end
+		render_snack_pop(self, active)
 		return
 	end
 	if active.mode == "garden_catch" then
@@ -832,8 +1279,9 @@ function show_game_round(self)
 		add_text(self, "game_title", game.name, 640, 650, 720, 50, COLORS.leaf_dark, 1.55)
 		self.action_hud_node = add_text(self, "action_hud", "Score " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left), 640, 604, 760, 36, COLORS.leaf, 0.95)
 		add_glass_card(self, "action_arena", 640, 388, 920, 340, COLORS.glass)
-		add_text(self, "action_prompt", round.prompt, 640, 505, 760, 70, COLORS.text, 1.02)
-		add_text(self, "action_feedback", active.feedback ~= "" and active.feedback or "Tap the right food pod before Bito's timer runs down.", 640, 450, 760, 34, COLORS.coral, 0.78)
+		add_action_scene_dressing(self, game.id)
+		add_text(self, "action_prompt", round.prompt, 640, 462, 760, 58, COLORS.text, 0.88)
+		add_text(self, "action_feedback", active.feedback ~= "" and active.feedback or "Tap the glowing target before Bito's timer runs down.", 640, 424, 760, 30, COLORS.coral, 0.68)
 
 		for i, choice in ipairs(round.choices) do
 			local positions = {
@@ -939,8 +1387,16 @@ function show_game_complete(self)
 	self.screen = "game_complete"
 	add_screen_background(self)
 	add_glass_card(self, "complete_panel", 640, 380, 820, 360, COLORS.glass)
-	local title = (active.mode == "action" or active.mode == "garden_catch") and (active.score >= active.target_score and "Mission Cleared!" or "Round Finished") or (self.low_stim and "Nice Work" or "Game Complete!")
-	local score_line = (active.mode == "action" or active.mode == "garden_catch") and ("Score: " .. active.score .. " / " .. active.target_score .. "\nLives left: " .. active.lives) or ("Score: " .. active.score .. " / " .. #active.rounds)
+	local target_modes = {
+		action = true,
+		garden_catch = true,
+		memory_cards = true,
+		maze_run = true,
+		recipe_stack = true,
+		snack_pop = true,
+	}
+	local title = target_modes[active.mode] and (active.score >= active.target_score and "Mission Cleared!" or "Round Finished") or (self.low_stim and "Nice Work" or "Game Complete!")
+	local score_line = target_modes[active.mode] and ("Score: " .. active.score .. " / " .. active.target_score .. "\nLives left: " .. active.lives) or ("Score: " .. active.score .. " / " .. #active.rounds)
 	add_text(self, "complete_title", title, 640, 500, 680, 58, COLORS.leaf_dark, 1.7)
 	add_text(self, "complete_text", active.session.game.name .. "\n" .. score_line .. "\nYou earned +" .. earned .. " points.", 640, 390, 640, 110, COLORS.text, 1.1)
 	self.wallet_node = add_text(self, "view_wallet", "", 640, 290, 520, 34, COLORS.leaf_dark, 1)
@@ -1034,12 +1490,13 @@ function show_parent(self)
 	add_text(self, "view_title", "Parent Info", 640, 650, 700, 58, COLORS.leaf_dark, 1.75)
 	add_floating_image(self, "parent_icon", "icon_parent", 425, 650, 82, 82, 8, 1.6, 0)
 	add_glass_card(self, "parent_panel", 640, 380, 840, 390, COLORS.glass)
-	add_text(self, "parent_text", parent_insight_text() .. "\n\nSensory mode: " .. (self.low_stim and "Low-Stim" or "Bright"), 640, 412, 760, 300, COLORS.text, 0.92)
+	add_text(self, "parent_text", parent_insight_text() .. "\n\nSensory mode: " .. (self.low_stim and "Low-Stim" or "Bright") .. "\n\nOps summary:\n" .. ops.pipeline_text(), 640, 412, 760, 300, COLORS.text, 0.84)
 	add_button(self, "toggle_sensory", self.low_stim and "Use Bright Mode" or "Use Low-Stim Mode", 500, 158, 270, 50, COLORS.purple, function()
 		set_sensory_mode(self, not self.low_stim)
 		show_parent(self)
 	end)
-	add_button(self, "home", "Home", 780, 158, 220, 50, COLORS.leaf, function() show_home(self) end)
+	add_button(self, "ops", "Ops Dashboard", 780, 158, 220, 50, COLORS.blue, function() show_ops_dashboard(self) end)
+	add_button(self, "home", "Home", 640, 92, 220, 46, COLORS.leaf, function() show_home(self) end)
 end
 
 local function refresh_current_screen(self)
@@ -1185,11 +1642,18 @@ function update(self, dt)
 		end
 		return
 	end
-	if self.screen == "game_round" and self.active_game and self.active_game.mode == "action" then
+	if self.screen == "game_round" and self.active_game and self.active_game.mode ~= "garden_catch" then
 		local active = self.active_game
 		active.time_left = math.max(0, (active.time_left or 0) - dt)
 		if self.action_hud_node then
-			gui.set_text(self.action_hud_node, "Score " .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left))
+			local labels = {
+				action = "Score ",
+				memory_cards = "Pairs ",
+				maze_run = "Ingredients ",
+				recipe_stack = "Steps ",
+				snack_pop = "Snacks ",
+			}
+			gui.set_text(self.action_hud_node, (labels[active.mode] or "Score ") .. active.score .. "/" .. active.target_score .. "    Lives " .. active.lives .. "    Time " .. math.ceil(active.time_left))
 		end
 		if active.time_left <= 0 then
 			show_game_complete(self)

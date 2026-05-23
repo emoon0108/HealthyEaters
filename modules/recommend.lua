@@ -1,4 +1,5 @@
 local storage = require("modules.storage")
+local ops = require("modules.ops")
 local M = {}
 
 -- Simple heuristic: suggest foods with the fewest exposures, diversified by food group
@@ -17,7 +18,7 @@ function M.next_meal_recs(n)
 			if s.child.sensitivities.smell and f.smell and f.smell ~= "Mild" then sensory_ok = false end
 			if s.child.sensitivities.color and f.color and f.color ~= "White" and f.color ~= "Beige" then sensory_ok = false end
 		end
-		if sensory_ok and not seen_group[f.group or "?"] then
+		if sensory_ok and ops.is_food_available(f.name) and not seen_group[f.group or "?"] then
 			table.insert(recs, f.name)
 			seen_group[f.group or "?"] = true
 			if #recs >= (n or 3) then break end

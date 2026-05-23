@@ -21,6 +21,7 @@ Healthy Eaters helps children with Autism Spectrum Disorder gradually expand the
 8. Let points unlock buddy customization, plate themes, food facts, garden seeds, titles, and celebration animations.
 9. Record the food in the glossary and update exposure history.
 10. Show parent-facing insights and next food recommendations.
+11. Monitor the meal through a caregiver operations flow with a QR/session code, status pipeline, menu availability, stock, and recent events.
 
 ## App Features
 
@@ -31,6 +32,7 @@ Healthy Eaters helps children with Autism Spectrum Disorder gradually expand the
 - Personalized recommendations based on food history, sensory preferences, nutrient gaps, and recent successes.
 - Nutritional education through animations, mini-games, and short food facts.
 - Parent dashboard with real-time meal data, progress summaries, and challenge customization.
+- Meal operations dashboard with QR/session-code start flow, live status, stock alerts, and event history.
 - Encouragement messaging from caregivers.
 - Real-time Bluetooth feedback from the smart plate.
 
@@ -62,7 +64,17 @@ Healthy Eaters helps children with Autism Spectrum Disorder gradually expand the
 - Challenges should be gradual: look, smell, touch, lick, bite, then eat.
 - Parents should be able to mark sensitivities for texture, smell, color, taste, and routine disruption.
 - Recommendations should avoid overwhelming changes and prefer small steps from familiar foods.
+- Recommendations should also respect caregiver-set menu availability and current food stock.
 - Rewards should reinforce effort, not pressure the child to finish everything.
+
+## Operations Dashboard Requirements
+
+- Each meal session has a short caregiver-facing code that can map to a QR flow later.
+- Meal state follows a clear pipeline: planned, started, tasting, completed, reviewed.
+- Caregivers can pause or reopen challenge foods from the available menu.
+- The app tracks simple stock counts for available foods and surfaces low-stock alerts.
+- Completed meals consume one stock unit for the active food.
+- The dashboard keeps a short event log for plate status, food steps, completion, restocking, and review.
 
 ## Prototype Milestones
 

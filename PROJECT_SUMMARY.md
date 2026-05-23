@@ -24,6 +24,7 @@ The app is designed to make eating practice feel safe, measurable, and rewarding
 
 - Starts a food challenge from the home or intro screen.
 - Chooses a recommended food automatically from the glossary using low-exposure food history.
+- Filters recommendations through caregiver menu availability and current food stock.
 - Creates a meal session for the selected food.
 - Rewards gradual meal steps instead of only rewarding full completion:
   - Look / identify the food: +5 points
@@ -41,6 +42,7 @@ The app is designed to make eating practice feel safe, measurable, and rewarding
   - Step-ladder status
 - Marks the meal complete when the target is reached.
 - Prevents the same meal from being rewarded multiple times.
+- Moves each meal through an operations pipeline: planned, started, tasting, completed, and reviewed.
 
 ### Smart Plate Prototype
 
@@ -58,6 +60,7 @@ The app is designed to make eating practice feel safe, measurable, and rewarding
 ### Rewards System
 
 - Stores points, tokens, streaks, badges, inventory, meal metrics, and glossary data.
+- Stores restaurant-style operations state including QR/session code, menu availability, stock counts, active food, meal status, and recent event log.
 - Awards 25 points and 3 game tokens when a meal challenge is completed.
 - Increases meal completion count.
 - Increases streak count for completed meals.
@@ -140,7 +143,18 @@ The app is designed to make eating practice feel safe, measurable, and rewarding
 - Recommends foods with the fewest exposures.
 - Diversifies recommendations by food group when possible.
 - Can avoid certain foods based on stored sensory sensitivity flags.
+- Skips unavailable, paused, closed, or out-of-stock foods.
 - Includes an `ai_personalize` hook for future recommendation logic using age, sensitivities, food history, and nutrient gaps.
+
+### Meal Operations Dashboard
+
+- Shows a QR-style session code for caregiver-started food challenges.
+- Tracks the active food and meal pipeline state.
+- Shows a menu availability list with food windows and stock levels.
+- Allows the caregiver to create a new session code.
+- Allows Apple to be paused or reopened as a proof-of-concept menu control.
+- Supports low-stock restocking from a simulated supply list.
+- Shows a live event log for plate connection, step completion, meal completion, inventory use, and review.
 
 ### Sensory Customization
 
@@ -177,6 +191,7 @@ The app is designed to make eating practice feel safe, measurable, and rewarding
   - Meals completed
   - Foods introduced
 - Lets the parent toggle between Bright mode and Low-Stim mode.
+- Links to a working Meal Ops Dashboard for operational monitoring and session controls.
 - Planned parent capabilities include:
   - Tracking meals completed
   - Reviewing foods explored
@@ -205,6 +220,10 @@ Implemented in the prototype:
 - Low-Stim sensory mode
 - Food glossary, step-level exposure tracking, and food attributes
 - Simple sensory-aware recommendation logic
+- Availability-aware recommendation logic
+- QR/session-code operations flow
+- Menu availability and inventory-lite stock tracking
+- Meal status pipeline and event timeline
 - Token economy
 - Ten mini-game definitions
 - Timed playable tap-board mini-games
@@ -220,6 +239,7 @@ Planned or stubbed for future work:
 - Real Bluetooth smart-plate integration
 - Real load-cell hardware data
 - Full parent dashboard
+- Deeper parent dashboard controls for every menu item and schedule
 - Parent controls for game limits and reward categories
 - Backend/Firebase sync
 - More detailed nutrition education content
@@ -252,6 +272,7 @@ Planned or stubbed for future work:
 - `modules/shop.lua`: shop item catalog, purchases, and equip logic.
 - `modules/glossary.lua`: food glossary and exposure tracking.
 - `modules/recommend.lua`: simple exposure-based recommendations.
+- `modules/ops.lua`: session codes, meal pipeline state, menu availability, stock, and event logs.
 - `modules/storage.lua`: local persistence and backend-ready stubs.
 - `docs/`: product requirements, mini-game plan, and points shop design.
 - `assets/`: child-friendly images, icons, sound effects, and font assets.

@@ -19,6 +19,7 @@ https://emoon0108.github.io/HealthyEaters/
 - Sensory-aware Low-Stim mode for calmer colors, language, and transitions
 - Food glossary with exposure tracking and recommendation hooks
 - Parent information screen with early Food IEP-style insights
+- Meal operations dashboard with QR/session codes, status pipeline, menu availability, stock alerts, and event logs
 - Local persistence through Defold `sys.save`
 
 ## Why It Matters
@@ -37,7 +38,7 @@ Many nutrition and habit apps focus on compliance. Healthy Eaters focuses on cur
 
 ```text
 main/       Defold scenes, scripts, and UI controllers
-modules/    Food tracking, rewards, recommendations, storage, games, BLE stubs
+modules/    Food tracking, rewards, recommendations, ops state, storage, games, BLE stubs
 assets/     Fonts, sound effects, and visual assets
 docs/       Product notes, mini-game design, rewards model, and project page
 scripts/    Asset generation helper scripts

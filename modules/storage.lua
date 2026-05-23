@@ -10,6 +10,26 @@ local function defaults()
 		rewards = { points = 0, tokens = 0, streak = 0, badges = {} },
 		inventory = { items = {}, equipped = { buddy = nil, plate = nil, celebration = nil, title = nil } },
 		metrics = { meals_completed = 0, new_foods = 0 },
+		ops = {
+			session_code = "HE-1042",
+			status = "planned",
+			active_food = nil,
+			event_log = {},
+			menu = {
+				{ name = "Apple", available = true, window = "Anytime", closed = false },
+				{ name = "Carrot", available = true, window = "Lunch", closed = false },
+				{ name = "Yogurt", available = true, window = "Breakfast", closed = false },
+				{ name = "Rice", available = true, window = "Dinner", closed = false },
+				{ name = "Chicken", available = true, window = "Dinner", closed = false },
+			},
+			stock = {
+				Apple = 4,
+				Carrot = 3,
+				Yogurt = 2,
+				Rice = 5,
+				Chicken = 2,
+			},
+		},
 		bito = { level = 1, exp = 0, energy_level = 50, current_form = "Scout" },
 		tasks = { missions = nil },
 	}
@@ -31,6 +51,12 @@ function M.init()
 	_state.inventory.items = _state.inventory.items or {}
 	_state.inventory.equipped = _state.inventory.equipped or d.inventory.equipped
 	_state.metrics = _state.metrics or d.metrics
+	_state.ops = _state.ops or d.ops
+	_state.ops.session_code = _state.ops.session_code or d.ops.session_code
+	_state.ops.status = _state.ops.status or d.ops.status
+	_state.ops.event_log = _state.ops.event_log or {}
+	_state.ops.menu = _state.ops.menu or d.ops.menu
+	_state.ops.stock = _state.ops.stock or d.ops.stock
 	_state.bito = _state.bito or d.bito
 	_state.bito.level = _state.bito.level or d.bito.level
 	_state.bito.exp = _state.bito.exp or d.bito.exp

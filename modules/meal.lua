@@ -20,6 +20,7 @@ function M.start_session(food_name)
 		last_weight = nil,
 		eaten = 0,
 		complete = false,
+		status = "planned",
 		steps = { look = false, interact = false, taste = false, complete = false },
 	}
 	glossary.touch(food_name) -- ensure in glossary
@@ -33,6 +34,7 @@ function M.on_weight_update(grams)
 		M.state.last_weight = grams
 		if not M.state.steps.interact then
 			M.state.steps.interact = true
+			M.state.status = "started"
 			table.insert(events, "interact")
 			glossary.record_step(M.state.food, "interact")
 		end
@@ -45,11 +47,13 @@ function M.on_weight_update(grams)
 	local pct = math.min(1, M.state.eaten / TARGET_GRAMS)
 	if not M.state.steps.taste and M.state.eaten >= TASTE_GRAMS then
 		M.state.steps.taste = true
+		M.state.status = "tasting"
 		table.insert(events, "taste")
 		glossary.record_step(M.state.food, "taste")
 	end
 	if not M.state.complete and pct >= 1 then
 		M.state.complete = true
+		M.state.status = "completed"
 		M.state.steps.complete = true
 		table.insert(events, "complete")
 		local s = storage.get_state()

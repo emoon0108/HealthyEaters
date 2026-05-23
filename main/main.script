@@ -2,6 +2,7 @@ local storage = require("modules.storage")
 local ble = require("modules.ble")
 local glossary = require("modules.glossary")
 local meal = require("modules.meal")
+local ops = require("modules.ops")
 local recommend = require("modules.recommend")
 local rewards = require("modules.rewards")
 
@@ -31,8 +32,10 @@ local function start_meal(self)
 	self.meal_active = true
 	self.current_food = recommend.next_meal_recs(1)[1] or "Apple"
 	meal.start_session(self.current_food)
+	ops.set_status("planned", self.current_food)
 	if meal.mark_look() then
 		rewards.award_points(STEP_REWARDS.look, { reason = "meal_step", step = "look" })
+		ops.log("Look step recorded for " .. self.current_food)
 	end
 	print("Starting meal challenge: " .. self.current_food)
 	post_wallet(self, "meal_started", {
@@ -47,6 +50,7 @@ local function start_meal(self)
 	ble.init({
 		on_connected = function()
 			print("Smart plate connected")
+			ops.set_status("started", self.current_food)
 			post_wallet(self, "plate_status", {
 				status = "connected",
 				food = self.current_food,
@@ -59,6 +63,11 @@ local function start_meal(self)
 			for _, step in ipairs(step_events or {}) do
 				if STEP_REWARDS[step] then
 					rewards.award_points(STEP_REWARDS[step], { reason = "meal_step", step = step })
+					if step == "taste" then
+						ops.set_status("tasting", self.current_food)
+					else
+						ops.log("Step completed: " .. step .. " for " .. self.current_food)
+					end
 					msg.post("#bito_controller", "food_step_completed", {
 						step = step,
 						food = self.current_food,
@@ -76,6 +85,8 @@ local function start_meal(self)
 				self.meal_active = false
 				rewards.award_points(25, { reason = "meal_complete" })
 				rewards.award_tokens(3)
+				ops.set_status("completed", self.current_food)
+				ops.consume_stock(self.current_food)
 				print("Meal complete. Awarded 25 points and 3 game tokens.")
 				print("Total points: " .. rewards.get_points() .. ", tokens: " .. rewards.get_tokens())
 				post_wallet(self, "meal_complete", {

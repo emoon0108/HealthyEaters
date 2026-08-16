@@ -4,6 +4,16 @@ Healthy Eaters is a Defold/Lua prototype for autism-aware nutrition support. It 
 
 The project is designed around one idea: eating practice should feel safe, measurable, and encouraging instead of pressured.
 
+## Engineering snapshot
+
+| Concern | Approach |
+| --- | --- |
+| Sensory accessibility | Atkinson Hyperlegible, a low-stimulation mode, calmer language, and restrained transitions |
+| State model | Separate Lua modules for meals, rewards, recommendations, games, tasks, and storage |
+| Hardware boundary | Simulated BLE smart-plate adapter that can be replaced by a native integration |
+| Progress loop | Four exposure steps, local persistence, tokens, badges, streaks, and parent-facing summaries |
+| Product scope | Playable prototype with ten mini-games and explicit simulated-hardware labeling |
+
 ## Live Project Page
 
 View the GitHub Pages overview:
@@ -54,5 +64,7 @@ main/main.collection
 ## Current Status
 
 Healthy Eaters is a playable prototype. The smart plate is simulated, but the code is structured so real Bluetooth/native plate integration can replace the simulator later.
+
+Current verification is manual in the Defold editor: launch `main/main.collection`, complete a meal flow, reopen the app to confirm persistence, and exercise Low-Stim mode plus the simulated plate connection. Automated Lua coverage and real-device BLE validation are future work.
 
 For a fuller feature inventory, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md).

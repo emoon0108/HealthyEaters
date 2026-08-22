@@ -8,20 +8,35 @@
       name="description"
       content="Autism-aware nutrition exposure prototype with a simulated smart plate, calm food challenges, rewards, mini-games, and parent progress concepts."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+    <meta name="theme-color" content="#f2ead8" />
+    <meta property="og:title" content="Healthy Eaters" />
+    <meta property="og:description" content="A low-stimulation nutrition exposure prototype with a simulated smart plate, local progress, and short food-learning rounds." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://emoon0108.github.io/HealthyEaters/" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href="https://emoon0108.github.io/HealthyEaters/" />
+    <link rel="icon" href="favicon.png" type="image/png" />
     <style>
+      @font-face {
+        font-family: "Atkinson Hyperlegible";
+        src: url("fonts/AtkinsonHyperlegible.ttf") format("truetype");
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Fraunces";
+        src: url("fonts/Fraunces.ttf") format("truetype");
+        font-display: swap;
+      }
+
       :root {
         color-scheme: light;
         --ink: #17211c;
         --muted: #5d6b61;
         --paper: #fbfaf4;
-        --leaf: #2f8f61;
-        --lime: #b7df72;
-        --sun: #f8c14a;
-        --berry: #d95f73;
-        --aqua: #68bdb8;
+        --leaf: #2f5b42;
+        --sun: #e4b94a;
+        --berry: #c44c3a;
       }
 
       * {
@@ -96,6 +111,11 @@
 
       a {
         color: inherit;
+      }
+
+      a:focus-visible {
+        outline: 3px solid var(--berry);
+        outline-offset: 4px;
       }
 
       .button {
@@ -288,6 +308,14 @@
           transform: none;
         }
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -313,7 +341,7 @@
             </div>
             <div class="screen-body">
               <div class="plate">
-                <img src="https://raw.githubusercontent.com/emoon0108/HealthyEaters/main/assets/images/plate_balanced.png" alt="Balanced plate illustration" />
+                <img src="favicon.png" alt="Balanced plate illustration" />
               </div>
               <div class="progress">
                 <div class="step"><strong>1</strong>Look</div>

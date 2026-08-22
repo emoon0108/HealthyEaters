@@ -21,6 +21,8 @@ jobs:
           sudo apt-get install --yes lua5.4
       - name: Test domain modules
         run: lua5.4 tests/run.lua
+      - name: Test project page integrity
+        run: python3 -m unittest discover -s tests -p 'test_site.py' -v
 
   defold-build:
     name: Defold project build

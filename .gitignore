@@ -5,3 +5,5 @@
 .DS_Store
 **/.DS_Store
 healthy_eaters_state
+__pycache__/
+*.pyc

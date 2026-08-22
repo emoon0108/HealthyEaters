@@ -45,7 +45,7 @@ Many nutrition and habit apps focus on compliance. Healthy Eaters focuses on cur
 - Lua
 - Local state persistence
 - BLE-ready smart-plate abstraction
-- Generated and hand-authored 2D game assets
+- Repo-local illustrated 2D food assets
 
 ## Project Structure
 
@@ -80,5 +80,13 @@ CI also compiles the complete project with the checksum-verified Defold 1.12.4 `
 Healthy Eaters is a playable prototype. The smart plate is simulated, but the code is structured so real Bluetooth/native plate integration can replace the simulator later.
 
 Automated checks cover the portable Lua domain modules and a full Defold build. Editor interaction, visual behavior, persistence across a real app restart, and the simulated plate callback timing still require a manual smoke test. Real-device BLE validation remains future work.
+
+## Safety and privacy boundary
+
+The prototype stores its child profile, sensory settings, food-exposure history, and rewards only in Defold's local `sys.save` storage. It has no backend, account system, analytics tracker, advertising SDK, or real Bluetooth connection. The included plate adapter generates simulated weights on-device.
+
+Healthy Eaters is not a medical device, diagnostic tool, feeding-therapy program, or source of individualized nutrition advice. A clinician or registered dietitian should guide real feeding concerns. Avoid entering a child's full name or sensitive health information on a shared device.
+
+See [SECURITY.md](SECURITY.md) for safe disclosure guidance. Do not put real child or health data in a bug report.
 
 For a fuller feature inventory, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md).

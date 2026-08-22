@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lua-modules:
+    name: Lua module tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.4
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes lua5.4
+      - name: Test domain modules
+        run: lua5.4 tests/run.lua
+
+  defold-build:
+    name: Defold project build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DEFOLD_VERSION: "1.12.4"
+      BOB_SHA256: "54ac57d9712fcd1e9de63f405803d159d88a2fbe940b8ef058ba503aa418fa18"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Download the pinned Defold builder
+        run: curl --fail --location --silent --show-error --output bob.jar "https://github.com/defold/defold/releases/download/${DEFOLD_VERSION}/bob.jar"
+      - name: Verify the builder checksum
+        run: echo "${BOB_SHA256}  bob.jar" | sha256sum --check
+      - name: Compile the project
+        run: java -jar bob.jar --archive resolve distclean build

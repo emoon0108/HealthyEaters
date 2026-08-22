@@ -1,5 +1,8 @@
 # Healthy Eaters
 
+[![CI](https://github.com/emoon0108/HealthyEaters/actions/workflows/ci.yml/badge.svg)](https://github.com/emoon0108/HealthyEaters/actions/workflows/ci.yml)
+[![Project page](https://img.shields.io/badge/project-live-2f7653)](https://emoon0108.github.io/HealthyEaters/)
+
 Healthy Eaters is a Defold/Lua prototype for autism-aware nutrition support. It combines gradual food exposure, a simulated smart plate, low-stimulation interface settings, token-gated mini-games, and parent-facing progress concepts.
 
 The project is designed around one idea: eating practice should feel safe, measurable, and encouraging instead of pressured.
@@ -13,6 +16,7 @@ The project is designed around one idea: eating practice should feel safe, measu
 | Hardware boundary | Simulated BLE smart-plate adapter that can be replaced by a native integration |
 | Progress loop | Four exposure steps, local persistence, tokens, badges, streaks, and parent-facing summaries |
 | Product scope | Playable prototype with ten mini-games and explicit simulated-hardware labeling |
+| Reliability | Headless Lua domain tests plus a pinned Defold project build in CI |
 
 ## Live Project Page
 
@@ -61,10 +65,20 @@ Open the folder in Defold, then run the main collection from:
 main/main.collection
 ```
 
+## Verification
+
+The domain suite exercises storage migration, meal milestones, reward accounting, token-gated games, purchases, recommendations, Bito progression, and mission claims without requiring the editor:
+
+```bash
+lua5.4 tests/run.lua
+```
+
+CI also compiles the complete project with the checksum-verified Defold 1.12.4 `bob.jar`, catching invalid resources and engine-level build failures that unit tests cannot see.
+
 ## Current Status
 
 Healthy Eaters is a playable prototype. The smart plate is simulated, but the code is structured so real Bluetooth/native plate integration can replace the simulator later.
 
-Current verification is manual in the Defold editor: launch `main/main.collection`, complete a meal flow, reopen the app to confirm persistence, and exercise Low-Stim mode plus the simulated plate connection. Automated Lua coverage and real-device BLE validation are future work.
+Automated checks cover the portable Lua domain modules and a full Defold build. Editor interaction, visual behavior, persistence across a real app restart, and the simulated plate callback timing still require a manual smoke test. Real-device BLE validation remains future work.
 
 For a fuller feature inventory, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md).

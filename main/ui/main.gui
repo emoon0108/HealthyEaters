@@ -1,7 +1,7 @@
 script: "/main/ui/main.gui_script"
 fonts {
   name: "text"
-  font: "/builtins/fonts/default.font"
+  font: "/assets/fonts/atkinson.font"
 }
 textures {
   name: "buddy_food"
@@ -89,35 +89,35 @@ textures {
 }
 textures {
   name: "bito_robot"
-  texture: "/assets/images/generated/bito_robot.png"
+  texture: "/assets/images/buddy_food.png"
 }
 textures {
   name: "bito_lab_background"
-  texture: "/assets/images/generated/bito_lab_background.png"
+  texture: "/assets/images/plate_balanced.png"
 }
 textures {
   name: "icon_step_look"
-  texture: "/assets/images/generated/icon_step_look.png"
+  texture: "/assets/images/decor_leaf.png"
 }
 textures {
   name: "icon_step_touch"
-  texture: "/assets/images/generated/icon_step_touch.png"
+  texture: "/assets/images/icon_heart_food.png"
 }
 textures {
   name: "icon_step_taste"
-  texture: "/assets/images/generated/icon_step_taste.png"
+  texture: "/assets/images/food_strawberry.png"
 }
 textures {
   name: "icon_points_star"
-  texture: "/assets/images/generated/icon_points_star.png"
+  texture: "/assets/images/decor_star.png"
 }
 textures {
   name: "icon_arcade_token"
-  texture: "/assets/images/generated/icon_arcade_token.png"
+  texture: "/assets/images/icon_token.png"
 }
 textures {
   name: "icon_upgrade_wrench"
-  texture: "/assets/images/generated/icon_upgrade_wrench.png"
+  texture: "/assets/images/icon_rewards.png"
 }
 nodes {
   position {
@@ -129,9 +129,9 @@ nodes {
     y: 720.0
   }
   color {
-    x: 0.08
-    y: 0.18
-    z: 0.13
+    x: 0.95
+    y: 0.92
+    z: 0.82
   }
   type: TYPE_BOX
   id: "background"
@@ -150,10 +150,7 @@ nodes {
     x: 400.0
     y: 50.0
   }
-  color {
-    x: 0.91
-    z: 0.76
-  }
+  color { x: 0.12 y: 0.25 z: 0.18 }
   type: TYPE_TEXT
   text: "Healthy Eaters"
   font: "text"
@@ -268,7 +265,7 @@ nodes {
     z: 0.67
   }
   type: TYPE_TEXT
-  text: "Food Game Arcade"
+  text: "Food practice lab"
   font: "text"
   id: "arcade_title"
   inherit_alpha: true

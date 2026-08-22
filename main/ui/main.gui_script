@@ -4,22 +4,22 @@ local shop = require("modules.shop")
 local storage = require("modules.storage")
 
 local NORMAL_COLORS = {
-	bg = vmath.vector4(0.97, 1.0, 0.84, 1),
-	panel = vmath.vector4(1.0, 0.98, 0.68, 1),
-	card = vmath.vector4(0.78, 0.95, 1.0, 1),
-	leaf = vmath.vector4(0.04, 0.68, 0.34, 1),
-	leaf_dark = vmath.vector4(0.03, 0.24, 0.16, 1),
-	blue = vmath.vector4(0.04, 0.53, 0.94, 1),
-	coral = vmath.vector4(1.0, 0.36, 0.25, 1),
-	gold = vmath.vector4(1.0, 0.73, 0.03, 1),
-	purple = vmath.vector4(0.47, 0.34, 0.95, 1),
-	pink = vmath.vector4(0.98, 0.35, 0.64, 1),
-	mint = vmath.vector4(0.42, 0.86, 0.58, 1),
-	sky = vmath.vector4(0.44, 0.78, 1.0, 1),
-	glass = vmath.vector4(1.0, 1.0, 1.0, 0.68),
-	shadow = vmath.vector4(0.12, 0.22, 0.26, 0.18),
-	tube = vmath.vector4(0.10, 0.82, 0.95, 0.9),
-	text = vmath.vector4(0.08, 0.16, 0.1, 1),
+	bg = vmath.vector4(0.95, 0.92, 0.82, 1),
+	panel = vmath.vector4(1.0, 0.98, 0.91, 1),
+	card = vmath.vector4(0.89, 0.86, 0.72, 1),
+	leaf = vmath.vector4(0.22, 0.43, 0.30, 1),
+	leaf_dark = vmath.vector4(0.08, 0.22, 0.14, 1),
+	blue = vmath.vector4(0.22, 0.43, 0.30, 1),
+	coral = vmath.vector4(0.78, 0.28, 0.20, 1),
+	gold = vmath.vector4(0.92, 0.67, 0.15, 1),
+	purple = vmath.vector4(0.78, 0.28, 0.20, 1),
+	pink = vmath.vector4(0.78, 0.28, 0.20, 1),
+	mint = vmath.vector4(0.52, 0.67, 0.48, 1),
+	sky = vmath.vector4(0.89, 0.86, 0.72, 1),
+	glass = vmath.vector4(1.0, 0.98, 0.91, 1),
+	shadow = vmath.vector4(0.08, 0.15, 0.10, 0.46),
+	tube = vmath.vector4(0.92, 0.67, 0.15, 1),
+	text = vmath.vector4(0.11, 0.16, 0.12, 1),
 	white = vmath.vector4(1, 1, 1, 1),
 }
 
@@ -36,7 +36,7 @@ local LOW_STIM_COLORS = {
 	pink = vmath.vector4(0.68, 0.47, 0.55, 1),
 	mint = vmath.vector4(0.62, 0.76, 0.64, 1),
 	sky = vmath.vector4(0.62, 0.72, 0.80, 1),
-	glass = vmath.vector4(1.0, 1.0, 1.0, 0.58),
+	glass = vmath.vector4(0.96, 0.95, 0.90, 1),
 	shadow = vmath.vector4(0.10, 0.16, 0.18, 0.12),
 	tube = vmath.vector4(0.38, 0.64, 0.70, 0.85),
 	text = vmath.vector4(0.10, 0.15, 0.12, 1),
@@ -257,14 +257,15 @@ local function add_floating_image(self, id, texture, x, y, w, h, amount, duratio
 end
 
 local function add_screen_background(self)
-	add_image(self, "screen_bg_art", "bito_lab_background", 640, 360, 1280, 720)
-	add_box(self, "screen_soft_wash", 640, 360, 1280, 720, vmath.vector4(1, 1, 1, self.low_stim and 0.34 or 0.14))
+	add_box(self, "screen_paper", 640, 360, 1280, 720, COLORS.bg)
+	add_box(self, "screen_field", 1085, 360, 390, 720, self.low_stim and COLORS.panel or COLORS.card)
+	add_box(self, "screen_rule", 884, 360, 4, 720, COLORS.coral)
+	add_box(self, "screen_top_rule", 640, 686, 1160, 2, COLORS.leaf_dark)
 end
 
 local function add_glass_card(self, id, x, y, w, h, color)
-	add_box(self, id .. "_shadow", x + 8, y - 10, w, h, COLORS.shadow)
+	add_box(self, id .. "_shadow", x + 6, y - 6, w, h, COLORS.shadow)
 	add_box(self, id .. "_base", x, y, w, h, color or COLORS.glass)
-	add_box(self, id .. "_shine", x, y + (h * 0.34), w * 0.86, math.max(8, h * 0.12), vmath.vector4(1, 1, 1, 0.22))
 end
 
 local function add_energy_tube(self, id, x, y, w, h, pct)
@@ -614,15 +615,15 @@ function show_intro(self)
 	add_floating_image(self, "intro_star_1", "decor_star", 405, 595, 58, 58, 9, 1.3, 0.2)
 	add_floating_image(self, "intro_leaf_1", "decor_leaf", 875, 594, 62, 62, 10, 1.5, 0.4)
 	add_text(self, "view_title", "Healthy Eaters", 640, 600, 640, 70, COLORS.leaf_dark, 2.05)
-	add_text(self, "tagline", "Eat healthy food. Earn tokens. Play food games. Unlock bright rewards.", 640, 526, 610, 70, COLORS.text, 1.05)
+	add_text(self, "tagline", "Log a meal, learn one food pattern, then choose a short practice round.", 640, 526, 610, 70, COLORS.text, 1.05)
 	add_text(self, "welcome", "Pick a place to start.", 640, 458, 520, 36, COLORS.leaf, 1.15)
 	add_button(self, "home", "Go To Home", 640, 385, 310, 58, COLORS.leaf, function() show_home(self) end)
 	add_button(self, "meal", "Start Food Challenge", 640, 315, 310, 58, COLORS.coral, function()
 		show_home(self)
 		msg.post("#script", "start_meal")
 	end)
-	add_button(self, "games", "Food Games", 475, 238, 255, 52, COLORS.blue, function() show_games(self) end)
-	add_button(self, "shop", "Points Arcade", 805, 238, 255, 52, COLORS.gold, function() show_shop(self) end)
+	add_button(self, "games", "Practice Rounds", 475, 238, 255, 52, COLORS.blue, function() show_games(self) end)
+	add_button(self, "shop", "Reward Shelf", 805, 238, 255, 52, COLORS.gold, function() show_shop(self) end)
 	add_button(self, "parent", "Parent Info", 640, 170, 250, 48, COLORS.purple, function() show_parent(self) end)
 	self.wallet_node = add_text(self, "view_wallet", "", 640, 94, 500, 34, COLORS.leaf_dark, 1)
 	update_wallet(self)
@@ -665,7 +666,7 @@ function show_home(self)
 	add_button(self, "start_meal", "Recharge With Food", 1030, 226, 260, 50, COLORS.coral, function() msg.post("#script", "start_meal") end)
 
 	add_glass_card(self, "action_strip", 640, 78, 840, 86, COLORS.glass)
-	add_button(self, "games", "Mission Games", 280, 98, 190, 50, COLORS.blue, function() show_games(self) end)
+	add_button(self, "games", "Practice Rounds", 280, 98, 190, 50, COLORS.blue, function() show_games(self) end)
 	add_button(self, "customize", "Customize", 520, 98, 190, 50, COLORS.mint, function() show_customize(self) end)
 	add_button(self, "shop", "Bot Upgrades", 760, 98, 190, 50, COLORS.gold, function() show_shop(self) end)
 	add_button(self, "parent", "Parent Panel", 1000, 98, 190, 50, COLORS.purple, function() show_parent(self) end)
@@ -676,13 +677,13 @@ function show_games(self)
 	clear_screen(self)
 	self.screen = "games"
 	add_screen_background(self)
-	add_text(self, "view_title", "Food Arcade", 640, 662, 700, 52, COLORS.leaf_dark, 1.65)
+	add_text(self, "view_title", "Food practice lab", 640, 662, 700, 52, COLORS.leaf_dark, 1.65)
 	add_floating_image(self, "games_icon", "icon_games", 360, 662, 76, 76, 8, 1.4, 0)
 	add_floating_image(self, "token_icon", "icon_token", 920, 662, 66, 66, 8, 1.3, 0.2)
 	self.wallet_node = add_text(self, "view_wallet", "", 640, 616, 520, 34, COLORS.leaf_dark, 1)
 	update_wallet(self)
 	add_glass_card(self, "arcade_marquee", 640, 570, 900, 52, COLORS.glass)
-	add_text(self, "games_hint", "Choose a cabinet. Tokens open longer food missions for Bito.", 640, 570, 800, 34, COLORS.text, 0.86)
+	add_text(self, "games_hint", "Choose a short round. Meal check-ins open longer practice sets.", 640, 570, 800, 34, COLORS.text, 0.86)
 	add_floating_image(self, "arcade_star_left", "decor_star", 225, 570, 42, 42, 7, 1.4, 0)
 	add_floating_image(self, "arcade_star_right", "decor_star", 1055, 570, 42, 42, 7, 1.4, 0.2)
 
@@ -724,7 +725,7 @@ function show_game_start(self, game_id)
 	add_button(self, "start_game", "Play", 500, 160, 220, 52, COLORS.coral, function()
 		local session, err = games.start_session(game_id)
 		if not session then
-			show_message(self, "Need Tokens", "Finish a food challenge first to earn game tokens.", function() show_home(self) end)
+			show_message(self, "Need Tokens", "Finish a meal check-in first to earn practice tokens.", function() show_home(self) end)
 			return
 		end
 		local rounds = GAME_ROUNDS[game_id] or {}
@@ -939,15 +940,15 @@ function show_game_complete(self)
 	self.screen = "game_complete"
 	add_screen_background(self)
 	add_glass_card(self, "complete_panel", 640, 380, 820, 360, COLORS.glass)
-	local title = (active.mode == "action" or active.mode == "garden_catch") and (active.score >= active.target_score and "Mission Cleared!" or "Round Finished") or (self.low_stim and "Nice Work" or "Game Complete!")
+	local title = (active.mode == "action" or active.mode == "garden_catch") and (active.score >= active.target_score and "Mission Cleared!" or "Round Finished") or (self.low_stim and "Nice Work" or "Practice complete")
 	local score_line = (active.mode == "action" or active.mode == "garden_catch") and ("Score: " .. active.score .. " / " .. active.target_score .. "\nLives left: " .. active.lives) or ("Score: " .. active.score .. " / " .. #active.rounds)
 	add_text(self, "complete_title", title, 640, 500, 680, 58, COLORS.leaf_dark, 1.7)
 	add_text(self, "complete_text", active.session.game.name .. "\n" .. score_line .. "\nYou earned +" .. earned .. " points.", 640, 390, 640, 110, COLORS.text, 1.1)
 	self.wallet_node = add_text(self, "view_wallet", "", 640, 290, 520, 34, COLORS.leaf_dark, 1)
 	update_wallet(self)
 	self.active_game = nil
-	add_button(self, "more_games", "More Games", 500, 190, 220, 52, COLORS.blue, function() show_games(self) end)
-	add_button(self, "shop", "Points Arcade", 780, 190, 220, 52, COLORS.gold, function() show_shop(self) end)
+	add_button(self, "more_games", "More Rounds", 500, 190, 220, 52, COLORS.blue, function() show_games(self) end)
+	add_button(self, "shop", "Reward Shelf", 780, 190, 220, 52, COLORS.gold, function() show_shop(self) end)
 end
 
 function show_shop(self)
@@ -961,7 +962,7 @@ function show_shop(self)
 	self.wallet_node = add_text(self, "view_wallet", "", 640, 612, 520, 34, COLORS.leaf_dark, 1)
 	update_wallet(self)
 	add_glass_card(self, "upgrade_marquee", 640, 566, 900, 52, COLORS.glass)
-	add_text(self, "shop_text", self.shop_feedback or "Spend Food Arcade points on Bito cores, armor, trails, titles, facts, gardens, and celebrations.", 640, 566, 810, 34, self.shop_feedback and COLORS.coral or COLORS.text, 0.76)
+	add_text(self, "shop_text", self.shop_feedback or "Use practice points for Bito parts, titles, food facts, gardens, and celebrations.", 640, 566, 810, 34, self.shop_feedback and COLORS.coral or COLORS.text, 0.76)
 	self.shop_feedback = nil
 
 	add_glass_card(self, "upgrade_floor", 640, 320, 1140, 356, vmath.vector4(0.74, 0.96, 0.88, 0.72))
@@ -980,7 +981,7 @@ function show_shop(self)
 	add_text(self, "upgrade_tip_text", "Owned cabinets can be tapped again to equip Bito's look.", 640, 86, 680, 28, COLORS.text, 0.68)
 	add_button(self, "home", "Bito Home", 360, 34, 200, 42, COLORS.leaf, function() show_home(self) end)
 	add_button(self, "customize", "Customize", 546, 34, 180, 42, COLORS.mint, function() show_customize(self) end)
-	add_button(self, "games", "Food Arcade", 732, 34, 180, 42, COLORS.blue, function() show_games(self) end)
+	add_button(self, "games", "Practice Lab", 732, 34, 180, 42, COLORS.blue, function() show_games(self) end)
 	add_button(self, "parent", "Parent Panel", 920, 34, 180, 42, COLORS.purple, function() show_parent(self) end)
 end
 
@@ -1023,7 +1024,7 @@ function show_customize(self)
 	add_text(self, "custom_tip_text", "Buy upgrades in the cabinet, then equip them here to change Bito's build.", 640, 86, 680, 28, COLORS.text, 0.68)
 	add_button(self, "home", "Bito Home", 360, 34, 180, 42, COLORS.leaf, function() show_home(self) end)
 	add_button(self, "shop", "Upgrade Shop", 640, 34, 180, 42, COLORS.gold, function() show_shop(self) end)
-	add_button(self, "games", "Food Arcade", 920, 34, 180, 42, COLORS.blue, function() show_games(self) end)
+	add_button(self, "games", "Practice Lab", 920, 34, 180, 42, COLORS.blue, function() show_games(self) end)
 end
 
 function show_parent(self)
@@ -1115,7 +1116,7 @@ function on_message(self, message_id, message, sender)
 	elseif message_id == hash("meal_complete") then
 		self.last_food = message.food
 		self.steps = message.steps or self.steps or {}
-		self.meal_status = "Meal complete! You earned 3 game tokens."
+		self.meal_status = "Meal complete! You earned 3 practice tokens."
 		self.progress = 100
 		self.progress_text = progress_path(100)
 		refresh_current_screen(self)

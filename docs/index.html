@@ -8,6 +8,9 @@
       name="description"
       content="Autism-aware nutrition exposure prototype with a simulated smart plate, calm food challenges, rewards, mini-games, and parent progress concepts."
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
     <style>
       :root {
         color-scheme: light;
@@ -27,7 +30,7 @@
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "Atkinson Hyperlegible", sans-serif;
         background: var(--paper);
         color: var(--ink);
       }
@@ -43,17 +46,37 @@
         gap: 48px;
         align-items: center;
         padding: 64px clamp(22px, 6vw, 88px) 32px;
-        background:
-          radial-gradient(circle at 12% 18%, rgba(248, 193, 74, 0.35), transparent 28%),
-          linear-gradient(135deg, #fffdf3 0%, #eaf6dd 52%, #dcf4f1 100%);
+        background: #f2ead8;
+        border-bottom: 4px solid var(--ink);
       }
 
       h1 {
         margin: 0;
         max-width: 760px;
         font-size: clamp(52px, 9vw, 126px);
-        line-height: 0.9;
-        letter-spacing: 0;
+        font-family: "Fraunces", serif;
+        line-height: 0.78;
+        letter-spacing: -0.07em;
+      }
+
+      h1 em {
+        display: block;
+        margin-left: 0.55em;
+        color: var(--leaf);
+        font-weight: 600;
+      }
+
+      .case-label {
+        display: inline-block;
+        margin-bottom: 22px;
+        padding: 6px 9px;
+        border: 2px solid var(--ink);
+        background: var(--sun);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        transform: rotate(-1deg);
       }
 
       .lead {
@@ -81,7 +104,7 @@
         align-items: center;
         justify-content: center;
         border: 2px solid var(--ink);
-        border-radius: 8px;
+        border-radius: 2px;
         padding: 0 18px;
         color: var(--ink);
         font-weight: 800;
@@ -101,12 +124,27 @@
         place-items: center;
       }
 
+      .showcase::before {
+        content: "PROTOTYPE / DEFOLD";
+        position: absolute;
+        top: 18px;
+        right: 0;
+        padding: 6px 10px;
+        background: var(--berry);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .12em;
+        transform: rotate(2deg);
+      }
+
       .screen {
         width: min(100%, 430px);
         border: 4px solid var(--ink);
-        border-radius: 28px;
+        border-radius: 4px;
         background: #fffef8;
-        box-shadow: 18px 18px 0 rgba(23, 33, 28, 0.16);
+        box-shadow: 18px 18px 0 var(--leaf);
+        transform: rotate(1.25deg);
         overflow: hidden;
       }
 
@@ -180,12 +218,25 @@
         gap: 18px;
       }
 
-      .card {
-        border: 2px solid rgba(23, 33, 28, 0.18);
-        border-radius: 8px;
-        padding: 22px;
-        background: #ffffff;
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 16px;
       }
+
+      .card {
+        grid-column: span 3;
+        border: 2px solid var(--ink);
+        border-radius: 2px;
+        padding: 22px;
+        background: var(--paper);
+        box-shadow: 6px 6px 0 rgba(23, 33, 28, 0.13);
+      }
+
+      .card:nth-child(1) { grid-column: span 5; transform: rotate(-.5deg); }
+      .card:nth-child(2) { grid-column: span 3; transform: translateY(28px); }
+      .card:nth-child(3) { grid-column: span 4; }
+      .card:nth-child(4) { grid-column: 5 / span 5; margin-top: 14px; transform: rotate(.5deg); }
 
       .card h2,
       .card h3 {
@@ -209,6 +260,7 @@
       }
 
       .metric {
+        font-family: "Fraunces", serif;
         font-size: 44px;
         font-weight: 900;
       }
@@ -225,8 +277,15 @@
         }
 
         .grid,
-        .band .grid {
+        .band .grid,
+        .feature-grid {
           grid-template-columns: 1fr;
+        }
+
+        .card:nth-child(n) {
+          grid-column: auto;
+          margin-top: 0;
+          transform: none;
         }
       }
     </style>
@@ -235,10 +294,10 @@
     <main>
       <section class="hero">
         <div>
-          <h1>Healthy Eaters</h1>
+          <span class="case-label">Case 04 · sensory nutrition</span>
+          <h1>Healthy <em>Eaters</em></h1>
           <p class="lead">
-            A sensory-aware nutrition prototype that turns food exposure into calm practice,
-            smart-plate progress, mini-games, and parent-friendly insight.
+            A Defold prototype that rewards looking, touching, and tasting before it ever asks a child to finish a plate.
           </p>
           <div class="actions">
             <a class="button primary" href="https://github.com/emoon0108/HealthyEaters">View Code</a>
@@ -268,22 +327,22 @@
       </section>
 
       <section>
-        <div class="grid">
+        <div class="feature-grid">
           <article class="card">
-            <h2>Smart Plate Ready</h2>
-            <p>BLE-style callbacks simulate connection, calibration, weight changes, and friendly disconnect states.</p>
+            <h2>Plate signal, not pressure</h2>
+            <p>BLE-style callbacks model calibration, grams removed, progress, and a calm disconnect state.</p>
           </article>
           <article class="card">
-            <h2>Low-Stim UX</h2>
-            <p>Softer colors, calmer language, and slower transitions support sensory-sensitive users.</p>
+            <h2>Low-stim pacing</h2>
+            <p>Quiet color, direct language, and slower transitions keep attention on one food step at a time.</p>
           </article>
           <article class="card">
-            <h2>Reward Loops</h2>
-            <p>Points, tokens, badges, streaks, and unlocks celebrate effort without pressuring completion.</p>
+            <h2>Effort earns the reward</h2>
+            <p>Points and tokens arrive at exposure milestones—not only after a completed meal.</p>
           </article>
           <article class="card">
-            <h2>Parent Insight</h2>
-            <p>Food exposure data supports early Food IEP-style summaries and progress patterns.</p>
+            <h2>A record adults can read</h2>
+            <p>Texture, color, and exposure history become a compact Food IEP-style progress snapshot.</p>
           </article>
         </div>
       </section>

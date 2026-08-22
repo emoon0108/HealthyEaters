@@ -90,3 +90,7 @@ Healthy Eaters is not a medical device, diagnostic tool, feeding-therapy program
 See [SECURITY.md](SECURITY.md) for safe disclosure guidance. Do not put real child or health data in a bug report.
 
 For a fuller feature inventory, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md).
+
+## License
+
+Original source code is available under the [MIT License](LICENSE). Fonts, images, sounds, and third-party material are excluded as described in [ASSET-LICENSE.md](ASSET-LICENSE.md).
